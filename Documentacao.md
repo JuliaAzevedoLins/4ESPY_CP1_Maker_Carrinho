@@ -203,15 +203,16 @@ A distribuição prevista dos componentes segue a organização esquemática aba
 
 ## 12. Dimensões Previstas
 
-| Dimensão | Valor planejado | Observação |
-|---|---|---|
-| Comprimento do chassi | 220 mm | Sujeito a ajuste durante a modelagem 3D |
-| Largura do chassi | 140 mm | Sujeito a ajuste durante a modelagem 3D |
-| Altura aproximada do chassi | 35 mm | Sujeito a ajuste durante a modelagem 3D |
-| Dimensões da carenagem | A definir | Depende do material escolhido e da modelagem estética |
-| Dimensões das rodas | A definir | Pendente de especificação |
+Tabela de referência com as dimensões típicas dos componentes previstos (modelos ainda não definidos oficialmente), utilizada como base para a atividade em aula de acordo com valores da Internet.
 
-**Observação importante:** as dimensões de 220 × 140 mm correspondem a valores **planejados** para o chassi, definidos com base no espaço estimado necessário para acomodar os componentes eletrônicos e mecânicos. Tais valores **não representam dimensões finais confirmadas**, podendo ser ajustados durante o processo de modelagem tridimensional e prototipagem.
+| Componente | Comprimento | Largura | Altura | Forma de Fixação |
+|---|---|---|---|---|
+| Motor esquerdo | ~65 mm (corpo + eixo) | ~24 mm (diâmetro do corpo) | ~18 mm | Parafusado no chassi via suportes laterais (bracket em L), na lateral traseira esquerda |
+| Motor direito | ~65 mm (corpo + eixo) | ~24 mm (diâmetro do corpo) | ~18 mm | Parafusado no chassi via suportes laterais (bracket em L), na lateral traseira direita |
+| ESP32 (DevKit V1) | ~55 mm | ~28 mm | ~13 mm | Encaixe em soquetes/pinos ou fixação com parafusos M3 + espaçadores (standoffs), posição central-superior |
+| Ponte H (TB6612FNG) | ~20 mm | ~22 mm | ~5 mm | Fixação com parafusos M2/M3 + espaçadores, próxima aos motores |
+
+**Observação:** os valores acima são medidas de referência de mercado para os modelos mais comuns (motor DC TT com caixa de redução, ESP32 DevKit V1 e módulo TB6612FNG). Como o modelo exato de cada componente ainda está pendente de definição (seção 8.2), esses valores não devem ser considerados finais.
 
 ---
 
