@@ -173,20 +173,20 @@ A distribuição prevista dos componentes segue a organização esquemática aba
                           FRENTE
                             ↓
         ┌──────────────────────────────────────┐
-        │              HC-SR04                  │
-        │           (sensor frontal)             │
-        │                                        │
-        │                ESP32                   │
-        │        (placa controladora)            │
-        │                                        │
-        │                PILHAS                  │
-        │      (região central/inferior)          │
-        │                                        │
-        │              TB6612FNG                 │
-        │        (driver dos motores)            │
-        │                                        │
-        │     MOTOR                    MOTOR     │
-        │   ESQUERDO                  DIREITO    │
+        │              HC-SR04                 │
+        │           (sensor frontal)           │
+        │                                      │
+        │                ESP32                 │
+        │        (placa controladora)          │
+        │                                      │
+        │                PILHAS                │
+        │      (região central/inferior)       │
+        │                                      │
+        │              TB6612FNG               │
+        │        (driver dos motores)          │
+        │                                      │
+        │     MOTOR                    MOTOR   │
+        │   ESQUERDO                  DIREITO  │
         └──────────────────────────────────────┘
                            TRÁS
 ```
@@ -285,17 +285,17 @@ O material definitivo, as dimensões finais e o método de fixação da carenage
 ```
                                 FRENTE
                                   ↓
-        ┌────────────────────────────────────────────┐  ─┐
+        ┌──────────────────────────────────────────────┐  ─┐
         │                  HC-SR04                     │   │
-        │                                                │   │
-        │                   ESP32                        │   │
-        │                                                │   │
-        │                  PILHAS                        │   │  140 mm
-        │                                                │   │
-        │                 TB6612FNG                      │   │
-        │                                                │   │
-        │      [MOTOR ESQ]              [MOTOR DIR]      │   │
-        └────────────────────────────────────────────┘  ─┘
+        │                                              │   │
+        │                   ESP32                      │   │
+        │                                              │   │
+        │                  PILHAS                      │   │  140 mm
+        │                                              │   │
+        │                 TB6612FNG                    │   │
+        │                                              │   │
+        │      [MOTOR ESQ]              [MOTOR DIR]    │   │
+        └──────────────────────────────────────────────┘  ─┘
                                  TRÁS
 
         ├──────────────────── 220 mm ───────────────────┤
@@ -305,7 +305,7 @@ O material definitivo, as dimensões finais e o método de fixação da carenage
 
 ```
               ┌──────────────────────────┐
-              │         HC-SR04           │   ← sensor frontal
+              │         HC-SR04          │   ← sensor frontal
               ├──────────────────────────┤
               │                          │
               │      CORPO / CHASSI      │   ~35 mm (altura)
@@ -321,7 +321,7 @@ O material definitivo, as dimensões finais e o método de fixação da carenage
               ┌──────────────────────────┐
               │                          │
               │      CORPO / CHASSI      │   ~35 mm (altura)
-              │      (acesso interno)     │
+              │      (acesso interno)    │
         (o)───┴──────────────────────────┴───(o)
       RODA MOTRIZ                        RODA MOTRIZ
        ESQUERDA                            DIREITA
@@ -383,5 +383,4 @@ Para a conclusão do projeto, as seguintes etapas ainda deverão ser realizadas:
 **Documento:** Documentação Técnica — PT1 - CP1
 **Projeto:** Carrinho Robótico WALL-E
 **Turma:** 4ESPY
-**Autores:** Julia Azevedo Lins (RM 98690), Luis Gustavo Barreto Garrido (RM 99210), Victor Hugo Aranda Forte (RM 99667), Felipe Cortez (RM 99750), Guilherme Akio (RM 98582)
-**Data:** 12/08/2026
+**Última alteração em:** 12/08/2026

@@ -4,8 +4,14 @@
 
 Projeto de carrinho robótico físico, com chassi impresso em 3D e carenagem estética inspirada no personagem WALL-E (filme *WALL-E*, Pixar). O robô é controlado remotamente sem fio, movimenta-se por meio de dois motores DC e detecta obstáculos com um sensor de distância.
 
-**Alunos:** Julia Azevedo Lins (RM 98690) · Luis Gustavo Barreto Garrido (RM 99210) · Victor Hugo Aranda Forte (RM 99667) · Felipe Cortez (RM 99750) · Guilherme Akio (RM 98582)
-
+- **Turma:** 4ESPY
+- **Avaliação:** CP1
+- **Alunos:**
+  - Julia Azevedo Lins — RM 98690
+  - Luis Gustavo Barreto Garrido — RM 99210
+  - Victor Hugo Aranda Forte — RM 99667
+  - Felipe Cortez — RM 99750
+  - Guilherme Akio — RM 98582
 ## Documentação
 
 Toda a documentação técnica do projeto — descrição, objetivo, requisitos funcionais e físicos, especificações técnicas, lista de componentes, arquitetura do sistema e croqui do chassi — está no arquivo [`Documentacao.md`](Documentacao.md).
