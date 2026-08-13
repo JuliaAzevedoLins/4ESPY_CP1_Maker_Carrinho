@@ -1,6 +1,6 @@
 # Carrinho Robótico WALL-E
 
-<img src="Wall-e.png" alt="WALL-E" width="250">
+<img src="imagens/Wall-e.png" alt="WALL-E" width="250">
 
 ## Identificação Acadêmica
 
@@ -272,13 +272,13 @@ O material definitivo, as dimensões finais e o método de fixação da carenage
 
 ### 16.0 Imagens do Croqui
 
-![Vista superior do chassi](1-vista-superior-final.png)
+![Vista superior do chassi](croqui/1-vista-superior-final.png)
 
-![Vista lateral do robô](2-vista-lateral-final.png)
+![Vista lateral do robô](croqui/2-vista-lateral-final.png)
 
-![Vista frontal do robô](3-vista-frontal-final.png)
+![Vista frontal do robô](croqui/3-vista-frontal-final.png)
 
-![Vista explodida: carenagem e chassi](4-vista-explodida-final.png)
+![Vista explodida: carenagem e chassi](croqui/4-vista-explodida-final.png)
 
 ### 16.1 Vista Superior (Top View)
 
