@@ -380,7 +380,404 @@ Para a conclusão do projeto, as seguintes etapas ainda deverão ser realizadas:
 
 ---
 
+## 20. Aula 15 — Arquitetura Eletrônica: Diagrama de Blocos e Alimentação
+
+Nesta etapa o grupo realizou a **montagem física de bancada** dos componentes eletrônicos, com o objetivo de validar o diagrama de blocos, o diagrama de alimentação e a pinagem antes da integração definitiva no chassi.
+
+### 20.1 Diagrama de Blocos (montagem de bancada)
+
+```mermaid
+flowchart TD
+    HCSR04[Sensor Ultrassônico HC-SR04] -- TRIG/ECHO --> ARD[Arduino Uno]
+    BT[Módulo Bluetooth HC-05] <-- comando --> ARD
+    ARD -- IN1/IN2/IN3/IN4 + ENA/ENB --> L298N[Ponte H - L298N]
+    L298N -- acionamento --> MOTORE[Motor Esquerdo]
+    L298N -- acionamento --> MOTORD[Motor Direito]
+    BAT[Bateria de teste] --> L298N
+    BAT --> ARD
+```
+
+### 20.2 Diagrama de Alimentação (montagem de bancada)
+
+```
+BATERIA
+   │
+   ▼
+PONTE H (L298N) ──► MOTORES
+   │
+   ▼
+ARDUINO ──► SENSOR / BLUETOOTH
+```
+
+### 20.3 Registro fotográfico da montagem
+
+![Diagrama de blocos e alimentação montado na bancada](<imagens/Diagrama de Blocos e bateria.png>)
+
+![Visão de cima da montagem: Arduino, ponte H, motores, sensor e bateria](<imagens/Diagramas (visão de cima).png>)
+
+![Detalhe da organização dos cabos no Arduino](<imagens/Cabos no Arduino.png>)
+
+### 20.4 Pinagem validada na bancada
+
+Durante a montagem, o grupo já testou e validou quais pinos serão utilizados para cada componente:
+
+| Componente | Sinal | Pino (Arduino Uno — teste de bancada) |
+|---|---|---|
+| Ponte H (L298N) | IN1 (direção motor esquerdo) | D4 |
+| Ponte H (L298N) | IN2 (direção motor esquerdo) | D7 |
+| Ponte H (L298N) | IN3 (direção motor direito) | D8 |
+| Ponte H (L298N) | IN4 (direção motor direito) | D12 |
+| Ponte H (L298N) | ENA (PWM / velocidade motor esquerdo) | D5 |
+| Ponte H (L298N) | ENB (PWM / velocidade motor direito) | D6 |
+| Sensor HC-SR04 | TRIG | D2 |
+| Sensor HC-SR04 | ECHO | D3 |
+
+### 20.5 Observações importantes sobre a montagem de teste vs. versão final
+
+> ⚠️ A montagem de bancada desta etapa foi feita com os componentes disponíveis no momento, **apenas para validar lógica, ligações e pinagem**. Os itens abaixo **não são os componentes definitivos** do projeto:
+
+- **Placa controladora:** a montagem de bancada usou um **Arduino Uno**, mas a versão final do robô utilizará **ESP32** (conforme já definido na Ficha de Requisitos, seção 5). A pinagem acima será remapeada para os GPIOs do ESP32 na integração final.
+- **Alimentação:** a montagem de bancada usou uma **bateria** (par de células recarregáveis) apenas por estarem disponíveis para o teste rápido. Na versão final do projeto será utilizada **pilha** (não recarregável), conforme já definido na Ficha de Requisitos (seção 5) e no Diagrama de Alimentação.
+
+---
+
+## 21. Aula 16 — Programação e Testes Iniciais
+
+Com a pinagem validada na Aula 15, o grupo avançou para os testes de programação, seguindo a lógica de **programação modular** e **teste incremental** apresentada em aula: motor a motor, depois movimentos, depois sensor, depois comunicação sem fio.
+
+### 21.1 Teste — Controle sem fio via Bluetooth
+
+O grupo testou o controle remoto do carrinho via **módulo Bluetooth (HC-05)**, comandado por um aplicativo de controle (gamepad) no celular. O teste **funcionou**: o carrinho respondeu corretamente aos comandos enviados pelo app (frente, trás, esquerda, direita).
+
+![Controle do carrinho via aplicativo Bluetooth no celular](<imagens/Controle Bluetooth.jpeg>)
+
+🎥 Vídeo do teste: [Controle Bluetooth.mp4](<vídeo/Controle Bluetooth.mp4>) *(o link abre o player de vídeo do próprio GitHub — veja a observação sobre reprodução do vídeo na seção 21.3)*
+
+**Código utilizado no teste** (arquivo [`Motor + Bluetooth.ino`](<Motor + Bluetooth.ino>), também disponível no repositório, testado em Arduino Uno + L298N + HC-SR04 + HC-05):
+
+```cpp
+/*
+  Carrinho WALL-E — teste de bancada: Arduino Uno + L298N + HC-SR04 + HC-05 (Bluetooth clássico)
+
+  Controle pelo app "Arduino Bluetooth Controller" (Giumig / com.giumig.apps.bluetoothserialmonitor)
+  ou qualquer outro app que envie os caracteres F / B / L / R / S por Bluetooth clássico (SPP).
+
+  IMPORTANTE: o app "BLE Controller" (que vocês baixaram antes) NÃO funciona com o HC-05 —
+  o HC-05 comum usa Bluetooth clássico (SPP), não BLE. Por isso o app certo aqui é o
+  "Arduino Bluetooth Controller" (funciona com HC-05/HC-06).
+
+  Comandos recebidos via Bluetooth:
+    F = frente   B = trás   L = esquerda   R = direita   S = parar (padrão quando solta o botão)
+
+  A parada por obstáculo (HC-SR04) continua ativa: mesmo que o comando seja "F" (frente),
+  se detectar algo perto, o carrinho para sozinho.
+*/
+
+#include <SoftwareSerial.h>
+
+// HC-05: usamos SoftwareSerial em vez dos pinos 0/1, assim não precisa desconectar
+// nada na hora de gravar o código pelo USB.
+SoftwareSerial BT(11, 12); // pino 11 = RX do Arduino (liga no TXD do HC-05)
+                            // pino 12 = TX do Arduino (liga no RXD do HC-05, via divisor resistivo)
+                            // NOTA: pino 12 é normalmente IN4, mas desativado pra este teste
+
+// ---------- Pinos do L298N (motores) ----------
+const int IN1 = 4;
+const int IN2 = 7;
+const int IN3 = 8;
+// const int IN4 = 12;  // DESATIVADO NESTE TESTE: pino 12 está sendo usado pelo HC-05 (TX)
+const int ENA = 5; // PWM
+const int ENB = 6; // PWM
+
+// ---------- Pinos do HC-SR04 ----------
+const int TRIG = 2;
+const int ECHO = 3;
+
+// ---------- Parâmetros ----------
+const int VELOCIDADE = 200;
+const float DISTANCIA_MINIMA_CM = 15.0;
+
+char comando = 'S';
+
+void setup() {
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  // pinMode(IN4, OUTPUT);  // desativado neste teste (pino 12 = HC-05 TX)
+  pinMode(ENA, OUTPUT);
+  pinMode(ENB, OUTPUT);
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+
+  Serial.begin(9600);  // Serial Monitor (USB) - continua livre, não conflita com o BT
+  BT.begin(9600);       // baud padrão da maioria dos módulos HC-05 (confirme com AT+UART?)
+
+  parar();
+  Serial.println("Pronto. Aguardando comandos via Bluetooth (F/B/L/R/S)...");
+}
+
+void loop() {
+  if (BT.available()) {
+    comando = BT.read();
+    Serial.print("Comando recebido: ");
+    Serial.println(comando);
+  }
+
+  float distancia = lerDistanciaCM();
+  bool obstaculo = (distancia > 0 && distancia < DISTANCIA_MINIMA_CM);
+
+  switch (comando) {
+    case 'F':
+      if (obstaculo) {
+        parar();
+        Serial.println("Obstaculo detectado - avanco bloqueado");
+      } else {
+        frente();
+      }
+      break;
+    case 'B':
+      tras();
+      break;
+    case 'L':
+      esquerda();
+      break;
+    case 'R':
+      direita();
+      break;
+    case 'S':
+    default:
+      parar();
+      break;
+  }
+
+  delay(50);
+}
+
+// =====================================================================
+// Funções de movimento
+// =====================================================================
+
+void frente() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  // digitalWrite(IN4, LOW);  // desativado neste teste (pino 12 = HC-05 TX)
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void tras() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, LOW);
+  // digitalWrite(IN4, HIGH);  // desativado neste teste (pino 12 = HC-05 TX)
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void esquerda() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, HIGH);
+  // digitalWrite(IN4, LOW);  // desativado neste teste (pino 12 = HC-05 TX)
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void direita() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  // digitalWrite(IN4, HIGH);  // desativado neste teste (pino 12 = HC-05 TX)
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void parar() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  // digitalWrite(IN4, LOW);  // desativado neste teste (pino 12 = HC-05 TX)
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
+}
+
+// =====================================================================
+// Sensor ultrassônico HC-SR04
+// =====================================================================
+
+float lerDistanciaCM() {
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+
+  long duracao = pulseIn(ECHO, HIGH, 30000);
+  if (duracao == 0) {
+    return -1;
+  }
+  return duracao * 0.0343 / 2.0;
+}
+```
+
+### 21.2 Teste — Motor + Sensor de Aproximação
+
+O grupo também testou a integração entre os motores e o **sensor ultrassônico HC-SR04**. Nesse teste, o carrinho anda para frente continuamente e **os motores param automaticamente quando o sensor detecta um objeto próximo**, validando o comportamento esperado pelos requisitos RF05 (detecção de obstáculos) e RF06 (interrupção do movimento ao detectar obstáculo).
+
+🎥 Vídeo do teste: [Motor + Sensor de Aproximação.mp4](<vídeo/Motor + Sensor de Aproximação.mp4>) *(o link abre o player de vídeo do próprio GitHub — veja a observação sobre reprodução do vídeo na seção 21.3)*
+
+No vídeo é possível observar os motores parando assim que o carrinho se aproxima do objeto.
+
+**Código utilizado no teste** (arquivo [`Motor + Sensor de Aproximacao.ino`](<Motor + Sensor de Aproximacao.ino>), também disponível no repositório, testado em Arduino Uno + L298N + pilhas AA):
+
+```cpp
+/*
+  Carrinho Robótico WALL-E — teste de motores + sensor (Arduino Uno + L298N)
+
+  Baseado na montagem: Arduino Uno + módulo L298N + 2 motores DC + 4x pilhas AA
+  (mesma montagem da imagem de referência), com o sensor HC-SR04 adicionado.
+
+  Comportamento: o carrinho anda para frente continuamente e PARA automaticamente
+  quando o HC-SR04 detecta um objeto mais perto que DISTANCIA_MINIMA_CM.
+
+  Este código NÃO tem controle remoto (Bluetooth/app) — é só o teste de
+  motores + sensor. Dá pra somar o controle remoto depois, em cima disso.
+*/
+
+// ---------- Pinos do L298N (motores) ----------
+const int IN1 = 4;   // direção motor esquerdo
+const int IN2 = 7;   // direção motor esquerdo
+const int IN3 = 8;   // direção motor direito
+const int IN4 = 12;  // direção motor direito
+const int ENA = 5;   // velocidade motor esquerdo (PWM)
+const int ENB = 6;   // velocidade motor direito (PWM)
+
+// ---------- Pinos do sensor HC-SR04 ----------
+const int TRIG = 2;
+const int ECHO = 3;
+// No Arduino Uno NÃO precisa de divisor resistivo no ECHO — a lógica do Uno já é 5V,
+// igual ao HC-SR04 (isso só é necessário no ESP32, que trabalha em 3.3V).
+
+// ---------- Parâmetros ajustáveis ----------
+const int VELOCIDADE = 200;              // 0-255
+const float DISTANCIA_MINIMA_CM = 15.0;  // ajustar depois de testar na prática
+
+void setup() {
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(ENA, OUTPUT);
+  pinMode(ENB, OUTPUT);
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+
+  Serial.begin(9600);
+  parar();
+  Serial.println("Pronto. Andando para frente ate encontrar um obstaculo.");
+}
+
+void loop() {
+  float distancia = lerDistanciaCM();
+
+  Serial.print("Distancia: ");
+  Serial.print(distancia);
+  Serial.println(" cm");
+
+  if (distancia > 0 && distancia < DISTANCIA_MINIMA_CM) {
+    parar();
+    Serial.println("Objeto detectado - motores parados");
+  } else {
+    frente();
+  }
+
+  delay(100); // pequena pausa entre leituras
+}
+
+// =====================================================================
+// Funções de movimento
+// =====================================================================
+
+void frente() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void tras() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void esquerda() {
+  // giro no proprio eixo
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void direita() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  analogWrite(ENA, VELOCIDADE);
+  analogWrite(ENB, VELOCIDADE);
+}
+
+void parar() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
+}
+
+// =====================================================================
+// Sensor ultrassônico HC-SR04
+// =====================================================================
+
+float lerDistanciaCM() {
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+
+  long duracao = pulseIn(ECHO, HIGH, 30000); // timeout 30ms
+
+  if (duracao == 0) {
+    return -1; // sem leitura valida
+  }
+
+  return duracao * 0.0343 / 2.0;
+}
+```
+
+### 21.3 Como assistir aos vídeos e onde está o código
+
+- **Vídeo:** o GitHub não reproduz vídeo diretamente dentro da página do `Documentacao.md` (markdown não dá suporte a player embutido/autoplay por segurança). Ao clicar em um dos links de vídeo acima, o GitHub abre a página do arquivo (`.mp4`) dentro do repositório, e nessa página o **próprio GitHub exibe um player nativo com botão de play** — não é necessário baixar o arquivo, só clicar em play na página que abrir.
+- **Código:** os arquivos `.ino` usados nos testes (`Motor + Bluetooth.ino` e `Motor + Sensor de Aproximacao.ino`) estão versionados na raiz deste repositório, além de estarem reproduzidos nesta documentação (seções 21.1 e 21.2).
+
+### 21.4 Observação sobre a placa utilizada nos testes
+
+Assim como na Aula 15, os testes de programação desta etapa (Bluetooth e sensor) foram realizados em **Arduino Uno**, por ser a placa disponível para os testes rápidos de bancada. A lógica validada (módulos de movimento, leitura do sensor, parada por proximidade e controle remoto) será portada para o **ESP32**, placa controladora definitiva do projeto.
+
+---
+
 **Documento:** Documentação Técnica — PT1 - CP1
 **Projeto:** Carrinho Robótico WALL-E
 **Turma:** 4ESPY
-**Última alteração em:** 12/08/2026
+**Última alteração em:** 19/08/2026
