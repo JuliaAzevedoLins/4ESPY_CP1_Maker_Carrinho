@@ -16,6 +16,17 @@ Projeto de carrinho robótico físico, com chassi impresso em 3D e carenagem est
 
 Toda a documentação técnica do projeto — descrição, objetivo, requisitos funcionais e físicos, especificações técnicas, lista de componentes, arquitetura do sistema, croqui do chassi e registros de montagem/testes — está no arquivo [`Documentacao.md`](Documentacao.md).
 
+## Planejamento e gestão
+
+Os artefatos de planejamento (MVP, priorização, backlog, dependências, kanban e custos) estão na pasta [`Organização/`](<Organização/README.md>):
+
+- [MVP](<Organização/MVP.html>) — produto minimamente funcional e critérios de aceite;
+- [MoSCoW](<Organização/MoSCoW.html>) — priorização das funcionalidades (Must/Should/Could/Won't);
+- [Backlog](<Organização/Backlog.html>) — tarefas, responsáveis, prazos e critérios de aceite;
+- [Dependências](<Organização/Dependências.html>) — precedências entre tarefas e caminho crítico;
+- [Kanban](<Organização/Kanban.html>) — situação atual das atividades (A fazer / Em andamento / Em validação / Concluído);
+- [Planilha de custos](<Organização/Planilha-de-custos.xlsx>) e seu [resumo visual](<Organização/Resumo-Planilha-de-custos.html>) — materiais, links, preços e total estimado.
+
 ## O que já foi feito
 
 - [x] Ficha de requisitos, requisitos funcionais e físicos, especificações técnicas e lista de componentes
@@ -50,5 +61,14 @@ Demais vistas e o esquema textual completo estão detalhados na [documentação 
 ├── Motor + Sensor de Aproximacao.ino  # código testado: motores + sensor HC-SR04
 ├── croqui/                       # imagens do croqui do chassi
 ├── imagens/                      # demais imagens do projeto (montagem, testes)
-└── vídeo/                        # vídeos dos testes (Bluetooth e sensor)
+├── vídeo/                        # vídeos dos testes (Bluetooth e sensor)
+└── Organização/                  # planejamento e gestão do projeto
+    ├── README.md                      # índice dos entregáveis e equipe
+    ├── MVP.html                       # produto mínimo viável e critérios de aceite
+    ├── MoSCoW.html                    # priorização Must/Should/Could/Won't
+    ├── Backlog.html                   # tarefas, responsáveis, prazos e critérios
+    ├── Dependências.html              # precedências entre tarefas e caminho crítico
+    ├── Kanban.html                    # quadro com a situação atual das tarefas
+    ├── Planilha-de-custos.xlsx        # planilha de custos original (Excel)
+    └── Resumo-Planilha-de-custos.html # resumo visual da planilha de custos
 ```

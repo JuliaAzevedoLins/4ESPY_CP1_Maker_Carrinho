@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban WALL·E</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --bg:#EDF1F3;
+    --surface:#FFFFFF;
+    --surface-2:#E2E8EC;
+    --ink:#1A222C;
+    --ink-muted:#5C6773;
+    --ink-faint:#8894A0;
+    --line:#C7D0D6;
+    --line-strong:#AAB6BE;
+    --accent:#B96A2A;
+    --accent-ink:#7A4110;
+    --accent-soft:#F1E2D2;
+
+    --must-bg:#F5DCD5;
+    --must-ink:#9A3A22;
+    --should-bg:#F2E6C4;
+    --should-ink:#8A6710;
+    --could-bg:#DCE6E0;
+    --could-ink:#3B6152;
+    --wont-bg:#E4E6E9;
+    --wont-ink:#5C6773;
+
+    --col-todo:#5C6773;
+    --col-doing:#2E7D96;
+    --col-review:#6E5A9E;
+    --col-done:#3F8351;
+
+    --p-felipe:#3E7CA6;
+    --p-luis:#7D5BA6;
+    --p-guilherme:#3F8F69;
+    --p-victor:#B8873A;
+    --p-julia:#C1573A;
+    --p-todos:#6B7480;
+
+    --shadow: 0 1px 2px rgba(20,30,40,.06), 0 6px 16px -8px rgba(20,30,40,.12);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10161C;
+      --surface:#171F27;
+      --surface-2:#1D2731;
+      --ink:#E7ECEF;
+      --ink-muted:#9AA7B0;
+      --ink-faint:#6C7A85;
+      --line:#2B3843;
+      --line-strong:#3A4A56;
+      --accent:#E08A42;
+      --accent-ink:#F4C89A;
+      --accent-soft:#3A2A1A;
+
+      --must-bg:#3E2420;
+      --must-ink:#E8998A;
+      --should-bg:#3A3018;
+      --should-ink:#E3C877;
+      --could-bg:#1E2E27;
+      --could-ink:#8FC3AC;
+      --wont-bg:#242C33;
+      --wont-ink:#9AA7B0;
+
+      --col-todo:#9AA7B0;
+      --col-doing:#5CAFC8;
+      --col-review:#A695D6;
+      --col-done:#6FBF8E;
+
+      --p-felipe:#6FA9D6;
+      --p-luis:#A78BD1;
+      --p-guilherme:#6BBF98;
+      --p-victor:#D6A85E;
+      --p-julia:#E0876A;
+      --p-todos:#98A4AE;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10161C;
+    --surface:#171F27;
+    --surface-2:#1D2731;
+    --ink:#E7ECEF;
+    --ink-muted:#9AA7B0;
+    --ink-faint:#6C7A85;
+    --line:#2B3843;
+    --line-strong:#3A4A56;
+    --accent:#E08A42;
+    --accent-ink:#F4C89A;
+    --accent-soft:#3A2A1A;
+
+    --must-bg:#3E2420;
+    --must-ink:#E8998A;
+    --should-bg:#3A3018;
+    --should-ink:#E3C877;
+    --could-bg:#1E2E27;
+    --could-ink:#8FC3AC;
+    --wont-bg:#242C33;
+    --wont-ink:#9AA7B0;
+
+    --col-todo:#9AA7B0;
+    --col-doing:#5CAFC8;
+    --col-review:#A695D6;
+    --col-done:#6FBF8E;
+
+    --p-felipe:#6FA9D6;
+    --p-luis:#A78BD1;
+    --p-guilherme:#6BBF98;
+    --p-victor:#D6A85E;
+    --p-julia:#E0876A;
+    --p-todos:#98A4AE;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", system-ui, sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+    text-wrap:balance;
+    margin:0;
+  }
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+  a{color:var(--accent-ink);}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  /* ---------- Site nav ---------- */
+  .sitenav{
+    display:flex; flex-wrap:wrap; gap:.3rem 1.2rem;
+    padding:.9rem 1.75rem;
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.78rem;
+    letter-spacing:.02em;
+    position:sticky; top:0; z-index:20;
+  }
+  .sitenav a{
+    color:var(--ink-muted);
+    text-decoration:none;
+    padding:.15rem .05rem;
+    border-bottom:2px solid transparent;
+  }
+  .sitenav a:hover{color:var(--ink);}
+  .sitenav a.active{color:var(--accent-ink); border-bottom-color:var(--accent);}
+
+  .page{
+    max-width:1400px;
+    margin:0 auto;
+    padding:2rem 1.75rem 3.5rem;
+    display:flex;
+    flex-direction:column;
+    gap:1.75rem;
+  }
+
+  /* ---------- Header ---------- */
+  .header{
+    display:flex;
+    flex-direction:column;
+    gap:1.1rem;
+    padding-bottom:1.4rem;
+    border-bottom:1px solid var(--line);
+  }
+  .header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:1.5rem;
+    flex-wrap:wrap;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.72rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent-ink);
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    margin:0 0 .35rem;
+  }
+  .eyebrow::before{
+    content:"";
+    width:.55rem;height:.55rem;
+    border:1.5px solid currentColor;
+    transform:rotate(45deg);
+    flex:none;
+  }
+  h1{font-size:2rem; font-weight:700; color:var(--ink);}
+  .subtitle{color:var(--ink-muted); font-size:.9rem; max-width:52ch;}
+  .subtitle a{text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px;}
+
+  .updated{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.78rem;
+    color:var(--ink-muted);
+    text-align:right;
+    display:flex;
+    flex-direction:column;
+    gap:.2rem;
+    white-space:nowrap;
+  }
+  .updated b{color:var(--ink); font-weight:600;}
+
+  /* progress */
+  .progress-row{display:flex; align-items:center; gap:1rem; flex-wrap:wrap;}
+  .progress-track{
+    flex:1 1 240px;
+    height:8px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    position:relative;
+    min-width:180px;
+  }
+  .progress-fill{
+    position:absolute; inset:0; width:0%;
+    background:linear-gradient(90deg, var(--accent), var(--col-done));
+  }
+  .progress-label{font-family:"IBM Plex Mono",monospace; font-size:.8rem; color:var(--ink-muted); white-space:nowrap;}
+  .progress-label b{color:var(--ink);}
+
+  /* workload */
+  .workload{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:.6rem 1.2rem;
+  }
+  .wl-row{display:flex; align-items:center; gap:.6rem;}
+  .wl-name{font-size:.78rem; color:var(--ink-muted); width:5.4rem; flex:none;}
+  .wl-bar-track{flex:1; height:6px; background:var(--surface-2); position:relative;}
+  .wl-bar-fill{position:absolute; inset:0 auto 0 0; height:100%;}
+  .wl-pts{font-family:"IBM Plex Mono",monospace; font-size:.75rem; color:var(--ink-faint); width:1.4rem; text-align:right; flex:none;}
+
+  section.block{display:flex; flex-direction:column; gap:.7rem;}
+  .block-title{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.72rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+
+  /* ---------- Filters ---------- */
+  .filters{display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;}
+  .chip{
+    appearance:none;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-muted);
+    font-size:.8rem;
+    padding:.35rem .75rem;
+    display:flex; align-items:center; gap:.4rem;
+    cursor:pointer;
+    transition:border-color .12s, color .12s, background .12s;
+  }
+  .chip:hover{border-color:var(--line-strong); color:var(--ink);}
+  .chip .dot{width:.55rem; height:.55rem; border-radius:50%; flex:none;}
+  .chip[aria-pressed="true"]{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--bg);
+  }
+  .chip[aria-pressed="true"] .dot{outline:2px solid var(--surface); outline-offset:1px;}
+
+  /* ---------- Board ---------- */
+  .board{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(260px,1fr));
+    gap:1rem;
+    align-items:start;
+  }
+  .column{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    min-height:220px;
+    max-height:min(78vh, 900px);
+  }
+  .column-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:.5rem;
+    padding:.75rem .85rem .65rem;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .column-head::before,.column-head::after{
+    content:"";
+    position:absolute;
+    top:6px; width:6px; height:6px;
+    border-top:1.5px solid var(--line-strong);
+  }
+  .column-head::before{left:6px; border-left:1.5px solid var(--line-strong);}
+  .column-head::after{right:6px; border-right:1.5px solid var(--line-strong);}
+  .column-name{
+    display:flex; align-items:baseline; gap:.5rem;
+    font-weight:600; font-size:.95rem;
+  }
+  .column-tag{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.68rem;
+    color:var(--bg);
+    padding:.05rem .35rem;
+  }
+  .column-count{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.78rem;
+    color:var(--ink-faint);
+  }
+  .column-note{
+    font-size:.7rem;
+    color:var(--ink-faint);
+    padding:0 .85rem .6rem;
+    border-bottom:1px solid var(--line);
+  }
+  .column-body{
+    padding:.7rem;
+    display:flex;
+    flex-direction:column;
+    gap:.55rem;
+    overflow-y:auto;
+  }
+  .column[data-col="todo"] .column-tag{background:var(--col-todo);}
+  .column[data-col="doing"] .column-tag{background:var(--col-doing);}
+  .column[data-col="review"] .column-tag{background:var(--col-review);}
+  .column[data-col="done"] .column-tag{background:var(--col-done);}
+
+  .empty-state{
+    margin:auto;
+    text-align:center;
+    color:var(--ink-faint);
+    font-size:.8rem;
+    padding:1.5rem .5rem;
+    border:1px dashed var(--line-strong);
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:3px solid var(--line-strong);
+    padding:.65rem .7rem .6rem;
+    display:flex;
+    flex-direction:column;
+    gap:.45rem;
+    box-shadow:var(--shadow);
+    transition:opacity .15s, transform .15s;
+  }
+  .card.is-dimmed{opacity:.28;}
+  .card.is-done{border-left-color:var(--col-done);}
+  .card.is-done .card-title{color:var(--ink-muted); text-decoration:line-through; text-decoration-color:var(--line-strong);}
+  .card-flag{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.66rem;
+    letter-spacing:.03em;
+    color:var(--col-doing);
+    background:color-mix(in srgb, var(--col-doing) 14%, transparent);
+    padding:.2rem .4rem;
+    width:fit-content;
+  }
+  .card-top{display:flex; align-items:center; justify-content:space-between; gap:.5rem;}
+  .card-id{font-family:"IBM Plex Mono",monospace; font-size:.72rem; color:var(--accent-ink); font-weight:600;}
+  .pill{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.62rem;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:.1rem .4rem;
+    flex:none;
+  }
+  .pill.must{background:var(--must-bg); color:var(--must-ink);}
+  .pill.should{background:var(--should-bg); color:var(--should-ink);}
+  .card-title{font-size:.86rem; color:var(--ink); line-height:1.35;}
+  .card-foot{display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-top:.1rem;}
+  .avatar{
+    width:1.5rem; height:1.5rem; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:"IBM Plex Mono",monospace; font-size:.62rem; font-weight:600;
+    color:#fff; flex:none;
+  }
+  .owner{display:flex; align-items:center; gap:.4rem;}
+  .owner-name{font-size:.72rem; color:var(--ink-muted);}
+  .card-meta{display:flex; align-items:center; gap:.55rem; font-family:"IBM Plex Mono",monospace; font-size:.7rem; color:var(--ink-faint);}
+  .card-meta .pts{color:var(--ink-muted);}
+
+  /* ---------- Footer blocks ---------- */
+  .footer-grid{
+    display:grid;
+    grid-template-columns:1.1fr 1.4fr;
+    gap:1.5rem;
+    align-items:start;
+  }
+  .done-list{
+    list-style:none; margin:0; padding:0;
+    display:flex; flex-direction:column; gap:.5rem;
+  }
+  .done-list li{
+    display:flex; align-items:flex-start; gap:.55rem;
+    font-size:.85rem; color:var(--ink-muted);
+    padding:.5rem .6rem;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:3px solid var(--col-done);
+  }
+  .done-list li::before{
+    content:"✓";
+    color:var(--col-done);
+    font-weight:700;
+    font-family:"IBM Plex Mono",monospace;
+    flex:none;
+  }
+  .policy-list{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:.55rem;}
+  .policy-list li{
+    display:flex; gap:.6rem;
+    font-size:.85rem; color:var(--ink-muted);
+    padding:.5rem .6rem;
+    background:var(--surface);
+    border:1px solid var(--line);
+  }
+  .policy-list .idx{
+    font-family:"IBM Plex Mono",monospace;
+    color:var(--accent-ink);
+    font-weight:600;
+    flex:none;
+  }
+  .policy-list b{color:var(--ink); font-weight:600;}
+
+  footer.credit{
+    font-size:.72rem; color:var(--ink-faint);
+    border-top:1px solid var(--line);
+    padding-top:1rem;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem;
+  }
+
+  @media (max-width: 980px){
+    .board{grid-template-columns:repeat(2,minmax(240px,1fr));}
+    .footer-grid{grid-template-columns:1fr;}
+    .header-top{flex-direction:column; align-items:flex-start;}
+    .updated{text-align:left;}
+  }
+  @media (max-width: 620px){
+    .board{grid-template-columns:1fr;}
+    .column{max-height:60vh;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <a href="README.md">Início</a>
+  <a href="MVP.html">MVP</a>
+  <a href="MoSCoW.html">MoSCoW</a>
+  <a href="Backlog.html">Backlog</a>
+  <a href="Dependências.html">Dependências</a>
+  <a href="Kanban.html" class="active">Kanban</a>
+  <a href="Resumo-Planilha-de-custos.html">Custos</a>
+</nav>
+
+<div class="page">
+
+  <header class="header">
+    <div class="header-top">
+      <div>
+        <p class="eyebrow">4ESPY_CP1 · Maker Carrinho</p>
+        <h1>Kanban WALL·E</h1>
+        <p class="subtitle">Quadro do <a href="Backlog.html">Backlog</a> do carrinho autônomo ESP32 — cada tarefa tem um cartão só, movido entre colunas conforme o trabalho avança.</p>
+      </div>
+      <div class="updated">
+        <span>Atualizado em <b>26/08/2026</b></span>
+        <span>Ciclo <b>26/08 → 16/09</b></span>
+      </div>
+    </div>
+
+    <div class="progress-row">
+      <span class="progress-label"><b id="doneCount">0</b>/<span id="totalCount">22</span> tarefas concluídas nesta etapa</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="progress-label">5 entregas concluídas no ciclo anterior</span>
+    </div>
+
+    <section class="block">
+      <p class="block-title">Carga por integrante (pontos como responsável principal)</p>
+      <div class="workload" id="workload"></div>
+    </section>
+  </header>
+
+  <div class="filters" id="filters" role="group" aria-label="Filtrar por responsável"></div>
+
+  <div class="board" id="board">
+    <section class="column" data-col="todo">
+      <div class="column-head">
+        <div class="column-name"><span class="column-tag">A</span>A fazer</div>
+        <span class="column-count"><span id="count-todo">0</span> cartões</span>
+      </div>
+      <div class="column-note">Sem limite de WIP definido</div>
+      <div class="column-body" id="col-todo"></div>
+    </section>
+
+    <section class="column" data-col="doing">
+      <div class="column-head">
+        <div class="column-name"><span class="column-tag">B</span>Em andamento</div>
+        <span class="column-count"><span id="count-doing">0</span> cartões</span>
+      </div>
+      <div class="column-note">Limite de 3 tarefas simultâneas para a equipe</div>
+      <div class="column-body" id="col-doing"></div>
+    </section>
+
+    <section class="column" data-col="review">
+      <div class="column-head">
+        <div class="column-name"><span class="column-tag">C</span>Em validação</div>
+        <span class="column-count">0 cartões</span>
+      </div>
+      <div class="column-note">Aguarda checagem do critério de aceite</div>
+      <div class="column-body"><p class="empty-state">Nenhuma tarefa aguardando validação<br>na data de criação deste quadro.</p></div>
+    </section>
+
+    <section class="column" data-col="done">
+      <div class="column-head">
+        <div class="column-name"><span class="column-tag">D</span>Concluído</div>
+        <span class="column-count"><span id="count-done">0</span> cartões</span>
+      </div>
+      <div class="column-note">Só entra ao cumprir o critério de aceite do backlog</div>
+      <div class="column-body" id="col-done"></div>
+    </section>
+  </div>
+
+  <div class="footer-grid">
+    <section class="block">
+      <p class="block-title">Concluído antes deste ciclo</p>
+      <ul class="done-list">
+        <li>Documentação técnica preliminar e ficha de requisitos</li>
+        <li>Croquis do chassi e distribuição dos componentes</li>
+        <li>Teste de motores e sensor HC-SR04 com Arduino/L298N</li>
+        <li>Teste de controle Bluetooth com HC-05</li>
+        <li>Registro em vídeo dos testes de bancada</li>
+      </ul>
+    </section>
+
+    <section class="block">
+      <p class="block-title">Política do quadro</p>
+      <ol class="policy-list">
+        <li><span class="idx">01</span><span>Limite de <b>3 tarefas simultâneas</b> em "Em andamento" para toda a equipe.</span></li>
+        <li><span class="idx">02</span><span>Uma tarefa só entra em "Concluído" quando cumprir o <b>critério de aceite</b> do backlog.</span></li>
+        <li><span class="idx">03</span><span>Tarefas bloqueadas permanecem em sua coluna com a marcação <b>BLOQUEADA</b> e a dependência indicada.</span></li>
+        <li><span class="idx">04</span><span>Itens <b>Must</b> têm prioridade sobre Should e Could.</span></li>
+        <li><span class="idx">05</span><span>Julia e Luis revisam o quadro ao final de cada encontro da equipe.</span></li>
+      </ol>
+    </section>
+  </div>
+
+  <footer class="credit">
+    <span>IDs correspondem ao <a href="Backlog.html">Backlog</a> do projeto</span>
+    <span>4ESPY_CP1_Maker_Carrinho</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var PEOPLE = {
+    "Felipe":    {color:"var(--p-felipe)",    initials:"FE"},
+    "Luis":      {color:"var(--p-luis)",      initials:"LU"},
+    "Guilherme": {color:"var(--p-guilherme)", initials:"GU"},
+    "Victor":    {color:"var(--p-victor)",    initials:"VI"},
+    "Julia":     {color:"var(--p-julia)",     initials:"JU"},
+    "Todos":     {color:"var(--p-todos)",     initials:"TD"}
+  };
+
+  var WORKLOAD = [
+    {name:"Julia", pts:26},
+    {name:"Victor", pts:15},
+    {name:"Luis", pts:12},
+    {name:"Felipe", pts:12},
+    {name:"Guilherme", pts:12}
+  ];
+
+  var TASKS = [
+    ["B01","Confirmar componentes definitivos e tensão das pilhas","Felipe","must",2,"27/08"],
+    ["B02","Atualizar e aprovar orçamento","Luis","must",2,"28/08"],
+    ["B03","Comprar/separar componentes faltantes","Guilherme","must",2,"28/08"],
+    ["B04","Medir componentes reais e pontos de fixação","Victor","must",3,"29/08"],
+    ["B09","Migrar controle de motores para ESP32/TB6612","Julia","must",5,"02/09"],
+    ["B10","Implementar comunicação sem fio no ESP32","Julia","must",5,"04/09"],
+    ["B12","Montar circuito elétrico definitivo","Felipe","must",5,"06/09"],
+    ["B13","Integrar firmware, motores, sensor e pilhas","Julia","must",5,"07/09"],
+    ["B14","Executar e registrar teste do MVP","Luis","must",3,"09/09"],
+    ["B15","Corrigir falhas encontradas no MVP","Julia","must",3,"11/09"],
+    ["B16","Fixar componentes, motores, rodas e caster","Felipe","must",5,"12/09"],
+    ["B17","Construir e instalar carenagem do WALL-E","Guilherme","must",5,"13/09"],
+    ["B18","Calibrar movimento, curvas e distância mínima","Guilherme","should",3,"14/09"],
+    ["B19","Realizar teste final e gravar demonstração","Luis","must",3,"15/09"],
+    ["B20","Consolidar documentação e organizar GitHub","Julia","must",5,"15/09"],
+    ["B21","Preparar roteiro curto e plano de contingência","Luis","should",2,"15/09"],
+    ["B22","Apresentar e entregar o CP1","Todos","must",2,"16/09"]
+  ];
+
+  var DOING = [
+    ["B07","Fatiar e imprimir protótipo/chassi final","Victor","must",5,"07/09","Impressão 3D em andamento"]
+  ];
+
+  var DONE_CYCLE = [
+    ["B05","Modelar chassi 3D com suportes e acesso","Victor","must",5,"02/09"],
+    ["B06","Revisar modelo 3D com a montagem elétrica","Victor","must",2,"03/09"],
+    ["B08","Definir pinagem ESP32 + TB6612FNG + HC-SR04","Julia","must",3,"30/08"],
+    ["B11","Integrar HC-SR04 e parada de segurança","Julia","must",3,"05/09"]
+  ];
+
+  // workload bars
+  var maxPts = Math.max.apply(null, WORKLOAD.map(function(w){return w.pts;}));
+  var wl = document.getElementById("workload");
+  WORKLOAD.forEach(function(w){
+    var p = PEOPLE[w.name];
+    var row = document.createElement("div");
+    row.className = "wl-row";
+    row.innerHTML =
+      '<span class="wl-name">'+w.name+'</span>'+
+      '<span class="wl-bar-track"><span class="wl-bar-fill" style="width:'+(w.pts/maxPts*100)+'%; background:'+p.color+';"></span></span>'+
+      '<span class="wl-pts mono">'+w.pts+'</span>';
+    wl.appendChild(row);
+  });
+
+  // filter chips
+  var filters = document.getElementById("filters");
+  var allChip = makeChip("Todos os cartões", null, "var(--ink-faint)");
+  allChip.setAttribute("aria-pressed","true");
+  filters.appendChild(allChip);
+  Object.keys(PEOPLE).forEach(function(name){
+    if(name === "Todos") return;
+    filters.appendChild(makeChip(name, name, PEOPLE[name].color));
+  });
+
+  function makeChip(label, value, color){
+    var b = document.createElement("button");
+    b.className = "chip";
+    b.type = "button";
+    b.setAttribute("aria-pressed","false");
+    b.dataset.value = value || "";
+    b.innerHTML = '<span class="dot" style="background:'+color+';"></span>'+label;
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".chip").forEach(function(c){c.setAttribute("aria-pressed", String(c===b));});
+      applyFilter(value);
+    });
+    return b;
+  }
+
+  function applyFilter(person){
+    document.querySelectorAll(".card").forEach(function(card){
+      var owner = card.dataset.owner;
+      var match = !person || owner === person;
+      card.classList.toggle("is-dimmed", !match);
+    });
+  }
+
+  // render cards
+  function buildCard(t, opts){
+    opts = opts || {};
+    var id=t[0], title=t[1], owner=t[2], priority=t[3], pts=t[4], due=t[5], note=t[6];
+    var p = PEOPLE[owner];
+    var card = document.createElement("article");
+    card.className = "card";
+    if(opts.done) card.classList.add("is-done");
+    card.dataset.owner = owner;
+    card.innerHTML =
+      '<div class="card-top">'+
+        '<span class="card-id">'+id+'</span>'+
+        '<span class="pill '+priority+'">'+(priority==="must"?"Must":"Should")+'</span>'+
+      '</div>'+
+      '<p class="card-title">'+title+'</p>'+
+      (note ? '<p class="card-flag">'+note+'</p>' : '')+
+      '<div class="card-foot">'+
+        '<span class="owner"><span class="avatar" style="background:'+p.color+';">'+p.initials+'</span><span class="owner-name">'+owner+'</span></span>'+
+        '<span class="card-meta"><span class="due">'+due+'</span><span class="pts">'+pts+' pts</span></span>'+
+      '</div>';
+    return card;
+  }
+
+  var colTodo = document.getElementById("col-todo");
+  TASKS.forEach(function(t){ colTodo.appendChild(buildCard(t)); });
+
+  var colDoing = document.getElementById("col-doing");
+  DOING.forEach(function(t){ colDoing.appendChild(buildCard(t)); });
+
+  var colDone = document.getElementById("col-done");
+  DONE_CYCLE.forEach(function(t){ colDone.appendChild(buildCard(t, {done:true})); });
+
+  document.getElementById("count-todo").textContent = TASKS.length;
+  document.getElementById("count-doing").textContent = DOING.length;
+  document.getElementById("count-done").textContent = DONE_CYCLE.length;
+
+  var total = TASKS.length + DOING.length + DONE_CYCLE.length;
+  document.getElementById("totalCount").textContent = total;
+  document.getElementById("doneCount").textContent = DONE_CYCLE.length;
+  document.getElementById("progressFill").style.width = (DONE_CYCLE.length/total*100)+"%";
+})();
+</script>
+</body>
+</html>

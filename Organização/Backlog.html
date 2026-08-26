@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backlog WALL·E</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#EDF1F3; --surface:#FFFFFF; --surface-2:#E2E8EC;
+    --ink:#1A222C; --ink-muted:#5C6773; --ink-faint:#8894A0;
+    --line:#C7D0D6; --line-strong:#AAB6BE;
+    --accent:#B96A2A; --accent-ink:#7A4110; --accent-soft:#F1E2D2;
+    --must-bg:#F5DCD5; --must-ink:#9A3A22;
+    --should-bg:#F2E6C4; --should-ink:#8A6710;
+    --p-felipe:#3E7CA6; --p-luis:#7D5BA6; --p-guilherme:#3F8F69; --p-victor:#B8873A; --p-julia:#C1573A; --p-todos:#6B7480;
+    --shadow: 0 1px 2px rgba(20,30,40,.06), 0 6px 16px -8px rgba(20,30,40,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10161C; --surface:#171F27; --surface-2:#1D2731;
+      --ink:#E7ECEF; --ink-muted:#9AA7B0; --ink-faint:#6C7A85;
+      --line:#2B3843; --line-strong:#3A4A56;
+      --accent:#E08A42; --accent-ink:#F4C89A; --accent-soft:#3A2A1A;
+      --must-bg:#3E2420; --must-ink:#E8998A;
+      --should-bg:#3A3018; --should-ink:#E3C877;
+      --p-felipe:#6FA9D6; --p-luis:#A78BD1; --p-guilherme:#6BBF98; --p-victor:#D6A85E; --p-julia:#E0876A; --p-todos:#98A4AE;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10161C; --surface:#171F27; --surface-2:#1D2731;
+    --ink:#E7ECEF; --ink-muted:#9AA7B0; --ink-faint:#6C7A85;
+    --line:#2B3843; --line-strong:#3A4A56;
+    --accent:#E08A42; --accent-ink:#F4C89A; --accent-soft:#3A2A1A;
+    --must-bg:#3E2420; --must-ink:#E8998A;
+    --should-bg:#3A3018; --should-ink:#E3C877;
+    --p-felipe:#6FA9D6; --p-luis:#A78BD1; --p-guilherme:#6BBF98; --p-victor:#D6A85E; --p-julia:#E0876A; --p-todos:#98A4AE;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif; text-wrap:balance; margin:0;}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+  a{color:var(--accent-ink);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  .sitenav{display:flex; flex-wrap:wrap; gap:.3rem 1.2rem; padding:.9rem 1.75rem; background:var(--surface); border-bottom:1px solid var(--line); font-family:"IBM Plex Mono",monospace; font-size:.78rem; letter-spacing:.02em; position:sticky; top:0; z-index:20;}
+  .sitenav a{color:var(--ink-muted); text-decoration:none; padding:.15rem .05rem; border-bottom:2px solid transparent;}
+  .sitenav a:hover{color:var(--ink);}
+  .sitenav a.active{color:var(--accent-ink); border-bottom-color:var(--accent);}
+
+  .page{max-width:1400px; margin:0 auto; padding:2rem 1.75rem 3.5rem; display:flex; flex-direction:column; gap:1.75rem;}
+
+  .header{display:flex; flex-direction:column; gap:1.1rem; padding-bottom:1.4rem; border-bottom:1px solid var(--line);}
+  .header-top{display:flex; justify-content:space-between; align-items:flex-end; gap:1.5rem; flex-wrap:wrap;}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); display:flex; align-items:center; gap:.5rem; margin:0 0 .35rem;}
+  .eyebrow::before{content:""; width:.55rem; height:.55rem; border:1.5px solid currentColor; transform:rotate(45deg); flex:none;}
+  h1{font-size:2rem; font-weight:700;}
+  .subtitle{color:var(--ink-muted); font-size:.9rem; max-width:60ch;}
+  .subtitle a{text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px;}
+  .updated{font-family:"IBM Plex Mono",monospace; font-size:.78rem; color:var(--ink-muted); text-align:right; display:flex; flex-direction:column; gap:.2rem; white-space:nowrap;}
+  .updated b{color:var(--ink); font-weight:600;}
+
+  section.block{display:flex; flex-direction:column; gap:.7rem;}
+  .block-title{font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); background:var(--surface);}
+  table.doc-table{width:100%; border-collapse:collapse; font-size:.83rem; min-width:1080px;}
+  .doc-table thead th{
+    position:sticky; top:41px; background:var(--surface-2);
+    font-family:"IBM Plex Mono",monospace; font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);
+    text-align:left; padding:.6rem .7rem; border-bottom:1px solid var(--line-strong); white-space:nowrap;
+  }
+  .doc-table td{padding:.6rem .7rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  .doc-table tbody tr:hover{background:var(--surface-2);}
+  .doc-table td.id{font-family:"IBM Plex Mono",monospace; color:var(--accent-ink); font-weight:600; white-space:nowrap;}
+  .doc-table td.num{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .doc-table td.date{font-family:"IBM Plex Mono",monospace; white-space:nowrap; color:var(--ink-muted);}
+  .doc-table td.crit{color:var(--ink-muted); min-width:22ch;}
+
+  .pill{font-family:"IBM Plex Mono",monospace; font-size:.62rem; letter-spacing:.04em; text-transform:uppercase; padding:.15rem .45rem; white-space:nowrap;}
+  .pill.must{background:var(--must-bg); color:var(--must-ink);}
+  .pill.should{background:var(--should-bg); color:var(--should-ink);}
+
+  .owner-tag{display:inline-flex; align-items:center; gap:.35rem; white-space:nowrap;}
+  .owner-dot{width:.55rem; height:.55rem; border-radius:50%; flex:none;}
+
+  .workload{display:flex; flex-direction:column; gap:.55rem; max-width:640px;}
+  .wl-row{display:flex; align-items:center; gap:.7rem;}
+  .wl-name{font-size:.82rem; width:6.5rem; flex:none;}
+  .wl-bar-track{flex:1; height:10px; background:var(--surface-2); border:1px solid var(--line); position:relative;}
+  .wl-bar-fill{position:absolute; inset:0 auto 0 0; height:100%;}
+  .wl-pts{font-family:"IBM Plex Mono",monospace; font-size:.8rem; color:var(--ink-muted); width:2rem; text-align:right; flex:none;}
+
+  footer.credit{font-size:.72rem; color:var(--ink-faint); border-top:1px solid var(--line); padding-top:1rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem;}
+
+  @media (max-width: 700px){
+    .header-top{flex-direction:column; align-items:flex-start;}
+    .updated{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <a href="README.md">Início</a>
+  <a href="MVP.html">MVP</a>
+  <a href="MoSCoW.html">MoSCoW</a>
+  <a href="Backlog.html" class="active">Backlog</a>
+  <a href="Dependências.html">Dependências</a>
+  <a href="Kanban.html">Kanban</a>
+  <a href="Resumo-Planilha-de-custos.html">Custos</a>
+</nav>
+
+<div class="page">
+  <header class="header">
+    <div class="header-top">
+      <div>
+        <p class="eyebrow">4ESPY_CP1 · Maker Carrinho</p>
+        <h1>Backlog WALL·E</h1>
+        <p class="subtitle">22 tarefas rastreadas até a entrega do CP1, com responsável principal, apoio, prioridade MoSCoW, pontos de esforço, prazo e critério de aceite. Situação atual em detalhe no <a href="Kanban.html">Kanban</a>.</p>
+      </div>
+      <div class="updated">
+        <span>Período <b>26/08 → 16/09/2026</b></span>
+        <span>Escala: 1 = simples · 2 = pequena · 3 = média · 5 = complexa</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="block">
+    <p class="block-title">Tarefas</p>
+    <div class="table-wrap">
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Tarefa</th><th>Responsável</th><th>Apoio</th><th>Prioridade</th>
+            <th class="num">Pontos</th><th>Prazo</th><th>Critério de aceite</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="block-title">Distribuição da carga principal</p>
+    <div class="workload" id="workload"></div>
+    <p class="subtitle">Julia concentra a integração de firmware e a consolidação técnica; os apoios foram distribuídos para que conhecimento, testes e montagem não dependam de uma única pessoa.</p>
+  </section>
+
+  <footer class="credit">
+    <span>IDs correspondem ao <a href="Kanban.html">Kanban</a></span>
+    <span>4ESPY_CP1_Maker_Carrinho</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var PEOPLE = {
+    "Felipe":"var(--p-felipe)", "Luis":"var(--p-luis)", "Guilherme":"var(--p-guilherme)",
+    "Victor":"var(--p-victor)", "Julia":"var(--p-julia)", "Todos":"var(--p-todos)"
+  };
+
+  var TASKS = [
+    ["B01","Confirmar componentes definitivos e tensão das pilhas","Felipe","Guilherme, Julia","must",2,"27/08","Lista compatível com ESP32, TB6612 e motores"],
+    ["B02","Atualizar e aprovar orçamento","Luis","Julia","must",2,"28/08","Planilha com links, quantidades e total revisada"],
+    ["B03","Comprar/separar componentes faltantes","Guilherme","Felipe","must",2,"28/08","Todos os itens disponíveis ou com entrega confirmada"],
+    ["B04","Medir componentes reais e pontos de fixação","Victor","Felipe","must",3,"29/08","Medidas registradas e conferidas"],
+    ["B05","Modelar chassi 3D com suportes e acesso","Victor","Guilherme","must",5,"02/09","Arquivo imprimível sem interferências aparentes"],
+    ["B06","Revisar modelo 3D com a montagem elétrica","Victor","Felipe, Guilherme","must",2,"03/09","Espaço, furos, cabos e centro de gravidade aprovados"],
+    ["B07","Fatiar e imprimir protótipo/chassi final","Victor","Guilherme","must",5,"07/09","Peça íntegra, nas dimensões e com encaixes utilizáveis"],
+    ["B08","Definir pinagem ESP32 + TB6612FNG + HC-SR04","Julia","Felipe","must",3,"30/08","Tabela de pinos sem conflitos e alimentação validada"],
+    ["B09","Migrar controle de motores para ESP32/TB6612","Julia","Guilherme","must",5,"02/09","Dois motores respondem aos comandos básicos"],
+    ["B10","Implementar comunicação sem fio no ESP32","Julia","Luis","must",5,"04/09","Controle envia e ESP32 interpreta todos os comandos"],
+    ["B11","Integrar HC-SR04 e parada de segurança","Julia","Felipe","must",3,"05/09","Carrinho bloqueia avanço abaixo do limite definido"],
+    ["B12","Montar circuito elétrico definitivo","Felipe","Guilherme","must",5,"06/09","Circuito firme, sem aquecimento ou conexões soltas"],
+    ["B13","Integrar firmware, motores, sensor e pilhas","Julia","Felipe, Guilherme","must",5,"07/09","Funções operam juntas sem cabo USB"],
+    ["B14","Executar e registrar teste do MVP","Luis","Todos","must",3,"09/09","Três ciclos completos aprovados e vídeo gravado"],
+    ["B15","Corrigir falhas encontradas no MVP","Julia","Responsável pela falha","must",3,"11/09","Itens críticos do teste encerrados"],
+    ["B16","Fixar componentes, motores, rodas e caster","Felipe","Guilherme, Victor","must",5,"12/09","Montagem firme, alinhada e acessível"],
+    ["B17","Construir e instalar carenagem do WALL-E","Guilherme","Victor, Felipe","must",5,"13/09","Visual reconhecível, sem bloquear rodas/sensor"],
+    ["B18","Calibrar movimento, curvas e distância mínima","Guilherme","Julia, Felipe","should",3,"14/09","Trajetória controlável e parada sem colisão"],
+    ["B19","Realizar teste final e gravar demonstração","Luis","Todos","must",3,"15/09","Checklist final aprovado, fotos e vídeo armazenados"],
+    ["B20","Consolidar documentação e organizar GitHub","Julia","Luis","must",5,"15/09","README, código, organização e evidências atualizados"],
+    ["B21","Preparar roteiro curto e plano de contingência","Luis","Julia","should",2,"15/09","Demonstração ensaiada e vídeo de backup disponível"],
+    ["B22","Apresentar e entregar o CP1","Todos","—","must",2,"16/09","Link do GitHub entregue e protótipo apresentado"]
+  ];
+
+  var WORKLOAD = [
+    {name:"Julia", pts:26}, {name:"Victor", pts:15}, {name:"Luis", pts:12},
+    {name:"Felipe", pts:12}, {name:"Guilherme", pts:12}
+  ];
+
+  function ownerTag(name){
+    var color = PEOPLE[name] || "var(--ink-faint)";
+    return '<span class="owner-tag"><span class="owner-dot" style="background:'+color+';"></span>'+name+'</span>';
+  }
+
+  var tbody = document.getElementById("tbody");
+  TASKS.forEach(function(t){
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td class="id">'+t[0]+'</td>'+
+      '<td>'+t[1]+'</td>'+
+      '<td>'+ownerTag(t[2])+'</td>'+
+      '<td>'+t[3]+'</td>'+
+      '<td><span class="pill '+t[4]+'">'+(t[4]==="must"?"Must":"Should")+'</span></td>'+
+      '<td class="num">'+t[5]+'</td>'+
+      '<td class="date">'+t[6]+'</td>'+
+      '<td class="crit">'+t[7]+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  var maxPts = Math.max.apply(null, WORKLOAD.map(function(w){return w.pts;}));
+  var wl = document.getElementById("workload");
+  WORKLOAD.forEach(function(w){
+    var color = PEOPLE[w.name];
+    var row = document.createElement("div");
+    row.className = "wl-row";
+    row.innerHTML =
+      '<span class="wl-name">'+w.name+'</span>'+
+      '<span class="wl-bar-track"><span class="wl-bar-fill" style="width:'+(w.pts/maxPts*100)+'%; background:'+color+';"></span></span>'+
+      '<span class="wl-pts mono">'+w.pts+'</span>';
+    wl.appendChild(row);
+  });
+})();
+</script>
+</body>
+</html>

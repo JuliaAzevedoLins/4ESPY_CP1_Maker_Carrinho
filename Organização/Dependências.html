@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dependências WALL·E</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#EDF1F3; --surface:#FFFFFF; --surface-2:#E2E8EC;
+    --ink:#1A222C; --ink-muted:#5C6773; --ink-faint:#8894A0;
+    --line:#C7D0D6; --line-strong:#AAB6BE;
+    --accent:#B96A2A; --accent-ink:#7A4110;
+    --risk:#9A3A22; --risk-bg:#F5DCD5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10161C; --surface:#171F27; --surface-2:#1D2731;
+      --ink:#E7ECEF; --ink-muted:#9AA7B0; --ink-faint:#6C7A85;
+      --line:#2B3843; --line-strong:#3A4A56;
+      --accent:#E08A42; --accent-ink:#F4C89A;
+      --risk:#E8998A; --risk-bg:#3E2420;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10161C; --surface:#171F27; --surface-2:#1D2731;
+    --ink:#E7ECEF; --ink-muted:#9AA7B0; --ink-faint:#6C7A85;
+    --line:#2B3843; --line-strong:#3A4A56;
+    --accent:#E08A42; --accent-ink:#F4C89A;
+    --risk:#E8998A; --risk-bg:#3E2420;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif; text-wrap:balance; margin:0;}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+  a{color:var(--accent-ink);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  .sitenav{display:flex; flex-wrap:wrap; gap:.3rem 1.2rem; padding:.9rem 1.75rem; background:var(--surface); border-bottom:1px solid var(--line); font-family:"IBM Plex Mono",monospace; font-size:.78rem; letter-spacing:.02em; position:sticky; top:0; z-index:20;}
+  .sitenav a{color:var(--ink-muted); text-decoration:none; padding:.15rem .05rem; border-bottom:2px solid transparent;}
+  .sitenav a:hover{color:var(--ink);}
+  .sitenav a.active{color:var(--accent-ink); border-bottom-color:var(--accent);}
+
+  .page{max-width:1200px; margin:0 auto; padding:2rem 1.75rem 3.5rem; display:flex; flex-direction:column; gap:2rem;}
+
+  .header{display:flex; flex-direction:column; gap:.7rem; padding-bottom:1.4rem; border-bottom:1px solid var(--line);}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); display:flex; align-items:center; gap:.5rem;}
+  .eyebrow::before{content:""; width:.55rem; height:.55rem; border:1.5px solid currentColor; transform:rotate(45deg); flex:none;}
+  h1{font-size:2rem; font-weight:700;}
+  .subtitle{color:var(--ink-muted); font-size:.9rem; max-width:66ch;}
+
+  section.block{display:flex; flex-direction:column; gap:.8rem;}
+  .block-title{font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); background:var(--surface);}
+  table.doc-table{width:100%; border-collapse:collapse; font-size:.83rem; min-width:760px;}
+  .doc-table thead th{background:var(--surface-2); font-family:"IBM Plex Mono",monospace; font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); text-align:left; padding:.6rem .7rem; border-bottom:1px solid var(--line-strong); white-space:nowrap;}
+  .doc-table td{padding:.6rem .7rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  .doc-table tbody tr:hover{background:var(--surface-2);}
+  .doc-table td.task{font-weight:500; white-space:nowrap;}
+  .doc-table td.dep{font-family:"IBM Plex Mono",monospace; color:var(--accent-ink); white-space:nowrap;}
+  .doc-table td.cons{color:var(--ink-muted); min-width:24ch;}
+
+  .path{display:flex; flex-wrap:wrap; align-items:center; gap:.25rem; padding:1.1rem; background:var(--surface); border:1px solid var(--line);}
+  .path-chip{font-family:"IBM Plex Mono",monospace; font-size:.78rem; font-weight:600; color:var(--accent-ink); background:var(--surface-2); border:1px solid var(--line-strong); padding:.3rem .55rem; white-space:nowrap;}
+  .path-arrow{color:var(--ink-faint); font-size:.85rem;}
+  .path-label{font-size:.78rem; color:var(--ink-faint); width:100%; margin-bottom:.3rem;}
+
+  .risk-list{display:flex; flex-direction:column; gap:.6rem;}
+  .risk-item{display:grid; grid-template-columns:14rem 1fr 1fr; gap:1rem; padding:.7rem .9rem; background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--risk);}
+  .risk-dep{font-weight:600; font-size:.88rem;}
+  .risk-what .k, .risk-mit .k{font-family:"IBM Plex Mono",monospace; font-size:.64rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); display:block; margin-bottom:.15rem;}
+  .risk-what span:not(.k){color:var(--risk); font-size:.85rem;}
+  .risk-mit span:not(.k){color:var(--ink-muted); font-size:.85rem;}
+
+  footer.credit{font-size:.72rem; color:var(--ink-faint); border-top:1px solid var(--line); padding-top:1rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem;}
+
+  @media (max-width: 760px){
+    .risk-item{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <a href="README.md">Início</a>
+  <a href="MVP.html">MVP</a>
+  <a href="MoSCoW.html">MoSCoW</a>
+  <a href="Backlog.html">Backlog</a>
+  <a href="Dependências.html" class="active">Dependências</a>
+  <a href="Kanban.html">Kanban</a>
+  <a href="Resumo-Planilha-de-custos.html">Custos</a>
+</nav>
+
+<div class="page">
+  <header class="header">
+    <p class="eyebrow">4ESPY_CP1 · Maker Carrinho</p>
+    <h1>Dependências do Projeto</h1>
+    <p class="subtitle">As IDs correspondem às tarefas do <a href="Backlog.html">Backlog</a>. Mapear precedências evita que uma frente comece com informação incompleta de outra.</p>
+  </header>
+
+  <section class="block">
+    <p class="block-title">Precedências entre tarefas</p>
+    <div class="table-wrap">
+      <table class="doc-table">
+        <thead><tr><th>Tarefa</th><th>Depende de</th><th>Tipo de dependência</th><th>Consequência se atrasar</th></tr></thead>
+        <tbody>
+          <tr><td class="task">B02 — Aprovar orçamento</td><td class="dep">B01</td><td>Técnica/financeira</td><td class="cons">Compra pode ser feita com componente incompatível</td></tr>
+          <tr><td class="task">B03 — Comprar/separar itens</td><td class="dep">B02</td><td>Financeira</td><td class="cons">Bloqueia medições, montagem e testes definitivos</td></tr>
+          <tr><td class="task">B04 — Medir componentes</td><td class="dep">B03</td><td>Material</td><td class="cons">Modelagem pode usar dimensões incorretas</td></tr>
+          <tr><td class="task">B05 — Modelar chassi</td><td class="dep">B04</td><td>Mecânica</td><td class="cons">Impressão e montagem física não começam</td></tr>
+          <tr><td class="task">B06 — Revisar modelo</td><td class="dep">B05, B08</td><td>Mecânica/elétrica</td><td class="cons">Risco de furos e espaços incompatíveis</td></tr>
+          <tr><td class="task">B07 — Imprimir chassi</td><td class="dep">B06</td><td>Fabricação</td><td class="cons">Bloqueia montagem final</td></tr>
+          <tr><td class="task">B09 — Controle dos motores</td><td class="dep">B08, B03</td><td>Técnica/material</td><td class="cons">Comunicação não poderá acionar o carrinho</td></tr>
+          <tr><td class="task">B10 — Comunicação sem fio</td><td class="dep">B08, B03</td><td>Técnica/material</td><td class="cons">Controle remoto não funciona</td></tr>
+          <tr><td class="task">B11 — Parada de segurança</td><td class="dep">B08, B03</td><td>Técnica/material</td><td class="cons">MVP fica sem requisito de segurança</td></tr>
+          <tr><td class="task">B12 — Circuito definitivo</td><td class="dep">B03, B08</td><td>Material/técnica</td><td class="cons">Integração não pode ser validada com segurança</td></tr>
+          <tr><td class="task">B13 — Integração geral</td><td class="dep">B09, B10, B11, B12</td><td>Técnica</td><td class="cons">MVP não pode ser testado</td></tr>
+          <tr><td class="task">B14 — Teste do MVP</td><td class="dep">B13</td><td>Validação</td><td class="cons">Não há comprovação do produto mínimo</td></tr>
+          <tr><td class="task">B15 — Correções do MVP</td><td class="dep">B14</td><td>Qualidade</td><td class="cons">Defeitos seguem para a montagem final</td></tr>
+          <tr><td class="task">B16 — Montagem no chassi</td><td class="dep">B07, B12, B15</td><td>Mecânica/técnica</td><td class="cons">Carenagem e teste final ficam bloqueados</td></tr>
+          <tr><td class="task">B17 — Carenagem</td><td class="dep">B07, B16</td><td>Mecânica/estética</td><td class="cons">Projeto não atinge a identidade visual proposta</td></tr>
+          <tr><td class="task">B18 — Calibração final</td><td class="dep">B16, B17</td><td>Qualidade</td><td class="cons">Movimento pode ficar instável</td></tr>
+          <tr><td class="task">B19 — Teste final</td><td class="dep">B17, B18</td><td>Validação</td><td class="cons">Não há evidência confiável para a entrega</td></tr>
+          <tr><td class="task">B20 — Documentação final</td><td class="dep">B14, B19</td><td>Documentação</td><td class="cons">GitHub não representa o protótipo entregue</td></tr>
+          <tr><td class="task">B21 — Roteiro/contingência</td><td class="dep">B19, B20</td><td>Apresentação</td><td class="cons">Demonstração fica vulnerável a falhas</td></tr>
+          <tr><td class="task">B22 — Entrega</td><td class="dep">B20, B21</td><td>Acadêmica</td><td class="cons">Entrega incompleta ou sem evidências</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="block-title">Caminho crítico</p>
+    <p class="subtitle">O caminho com menor tolerância a atraso:</p>
+    <div class="path" id="path-critical"></div>
+    <p class="subtitle">Em paralelo, a frente eletrônica e de firmware segue:</p>
+    <div class="path" id="path-parallel"></div>
+  </section>
+
+  <section class="block">
+    <p class="block-title">Dependências externas e mitigação</p>
+    <div class="risk-list">
+      <div class="risk-item">
+        <span class="risk-dep">Entrega de componentes</span>
+        <span class="risk-what"><span class="k">Risco</span><span>Atraso ou item incompatível</span></span>
+        <span class="risk-mit"><span class="k">Mitigação</span><span>Comprar até 28/08 e manter componentes de teste como contingência</span></span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-dep">Disponibilidade da impressora 3D</span>
+        <span class="risk-what"><span class="k">Risco</span><span>Fila, falha ou reimpressão</span></span>
+        <span class="risk-mit"><span class="k">Mitigação</span><span>Reservar horário, imprimir teste de encaixe e concluir até 07/09</span></span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-dep">Aplicativo/controlador Bluetooth</span>
+        <span class="risk-what"><span class="k">Risco</span><span>Incompatibilidade com celular</span></span>
+        <span class="risk-mit"><span class="k">Mitigação</span><span>Testar em dois celulares e manter comandos documentados</span></span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-dep">Carga das pilhas</span>
+        <span class="risk-what"><span class="k">Risco</span><span>Queda de tensão durante a apresentação</span></span>
+        <span class="risk-mit"><span class="k">Mitigação</span><span>Levar conjunto novo de pilhas e multímetro</span></span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-dep">Falha na demonstração ao vivo</span>
+        <span class="risk-what"><span class="k">Risco</span><span>Ambiente ou conexão</span></span>
+        <span class="risk-mit"><span class="k">Mitigação</span><span>Gravar vídeo completo do teste final em 15/09</span></span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="credit">
+    <span>Situação atual das tarefas no <a href="Kanban.html">Kanban</a></span>
+    <span>4ESPY_CP1_Maker_Carrinho</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  function renderPath(elId, ids){
+    var el = document.getElementById(elId);
+    ids.forEach(function(id, i){
+      var chip = document.createElement("span");
+      chip.className = "path-chip";
+      chip.textContent = id;
+      el.appendChild(chip);
+      if(i < ids.length - 1){
+        var arrow = document.createElement("span");
+        arrow.className = "path-arrow";
+        arrow.textContent = "→";
+        el.appendChild(arrow);
+      }
+    });
+  }
+  renderPath("path-critical", ["B01","B02","B03","B04","B05","B06","B07","B16","B17","B18","B19","B20","B21","B22"]);
+  renderPath("path-parallel", ["B03 + B08","B09/B10/B11/B12","B13","B14","B15","B16"]);
+})();
+</script>
+</body>
+</html>

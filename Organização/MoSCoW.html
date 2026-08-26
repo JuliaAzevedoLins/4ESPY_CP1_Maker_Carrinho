@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoSCoW WALL·E</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#EDF1F3; --surface:#FFFFFF; --surface-2:#E2E8EC;
+    --ink:#1A222C; --ink-muted:#5C6773; --ink-faint:#8894A0;
+    --line:#C7D0D6; --line-strong:#AAB6BE;
+    --accent:#B96A2A; --accent-ink:#7A4110;
+    --must:#B3402A; --should:#A87A1E; --could:#3B7A5E; --wont:#6B7480;
+    --must-bg:#F5DCD5; --must-ink:#9A3A22;
+    --should-bg:#F2E6C4; --should-ink:#8A6710;
+    --could-bg:#DCE6E0; --could-ink:#2E6B4E;
+    --wont-bg:#E4E6E9; --wont-ink:#5C6773;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10161C; --surface:#171F27; --surface-2:#1D2731;
+      --ink:#E7ECEF; --ink-muted:#9AA7B0; --ink-faint:#6C7A85;
+      --line:#2B3843; --line-strong:#3A4A56;
+      --accent:#E08A42; --accent-ink:#F4C89A;
+      --must:#D97A63; --should:#D9B24E; --could:#6FBF98; --wont:#9AA7B0;
+      --must-bg:#3E2420; --must-ink:#E8998A;
+      --should-bg:#3A3018; --should-ink:#E3C877;
+      --could-bg:#1E2E27; --could-ink:#8FC3AC;
+      --wont-bg:#242C33; --wont-ink:#9AA7B0;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10161C; --surface:#171F27; --surface-2:#1D2731;
+    --ink:#E7ECEF; --ink-muted:#9AA7B0; --ink-faint:#6C7A85;
+    --line:#2B3843; --line-strong:#3A4A56;
+    --accent:#E08A42; --accent-ink:#F4C89A;
+    --must:#D97A63; --should:#D9B24E; --could:#6FBF98; --wont:#9AA7B0;
+    --must-bg:#3E2420; --must-ink:#E8998A;
+    --should-bg:#3A3018; --should-ink:#E3C877;
+    --could-bg:#1E2E27; --could-ink:#8FC3AC;
+    --wont-bg:#242C33; --wont-ink:#9AA7B0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif; text-wrap:balance; margin:0;}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+  a{color:var(--accent-ink);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  .sitenav{display:flex; flex-wrap:wrap; gap:.3rem 1.2rem; padding:.9rem 1.75rem; background:var(--surface); border-bottom:1px solid var(--line); font-family:"IBM Plex Mono",monospace; font-size:.78rem; letter-spacing:.02em; position:sticky; top:0; z-index:20;}
+  .sitenav a{color:var(--ink-muted); text-decoration:none; padding:.15rem .05rem; border-bottom:2px solid transparent;}
+  .sitenav a:hover{color:var(--ink);}
+  .sitenav a.active{color:var(--accent-ink); border-bottom-color:var(--accent);}
+
+  .page{max-width:1200px; margin:0 auto; padding:2rem 1.75rem 3.5rem; display:flex; flex-direction:column; gap:2rem;}
+
+  .header{display:flex; flex-direction:column; gap:.7rem; padding-bottom:1.4rem; border-bottom:1px solid var(--line);}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); display:flex; align-items:center; gap:.5rem; margin:0 0 .35rem;}
+  .eyebrow::before{content:""; width:.55rem; height:.55rem; border:1.5px solid currentColor; transform:rotate(45deg); flex:none;}
+  h1{font-size:2rem; font-weight:700;}
+  .subtitle{color:var(--ink-muted); font-size:.9rem; max-width:70ch;}
+
+  .quadrant{display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;}
+  .m-section{background:var(--surface); border:1px solid var(--line); border-top:4px solid var(--m-color); display:flex; flex-direction:column;}
+  .m-head{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; padding:1rem 1.1rem .5rem;}
+  .m-title{font-size:1.15rem; font-weight:700; color:var(--m-color);}
+  .m-count{font-family:"IBM Plex Mono",monospace; font-size:.75rem; color:var(--ink-faint);}
+  .m-desc{padding:0 1.1rem .8rem; color:var(--ink-muted); font-size:.82rem;}
+
+  .m-list{list-style:none; margin:0; padding:0 1.1rem 1.1rem; display:flex; flex-direction:column; gap:.55rem;}
+  .m-item{display:flex; gap:.65rem; padding:.55rem .65rem; background:var(--surface-2); border:1px solid var(--line);}
+  .m-id{font-family:"IBM Plex Mono",monospace; font-size:.72rem; font-weight:600; color:var(--m-color); flex:none; padding-top:.05rem;}
+  .m-body{display:flex; flex-direction:column; gap:.15rem;}
+  .m-name{font-size:.85rem; font-weight:500;}
+  .m-note{font-size:.78rem; color:var(--ink-muted);}
+
+  [data-tier="must"]{--m-color: var(--must);}
+  [data-tier="should"]{--m-color: var(--should);}
+  [data-tier="could"]{--m-color: var(--could);}
+  [data-tier="wont"]{--m-color: var(--wont);}
+
+  footer.credit{font-size:.72rem; color:var(--ink-faint); border-top:1px solid var(--line); padding-top:1rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem;}
+
+  @media (max-width: 860px){ .quadrant{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <a href="README.md">Início</a>
+  <a href="MVP.html">MVP</a>
+  <a href="MoSCoW.html" class="active">MoSCoW</a>
+  <a href="Backlog.html">Backlog</a>
+  <a href="Dependências.html">Dependências</a>
+  <a href="Kanban.html">Kanban</a>
+  <a href="Resumo-Planilha-de-custos.html">Custos</a>
+</nav>
+
+<div class="page">
+  <header class="header">
+    <p class="eyebrow">4ESPY_CP1 · Maker Carrinho</p>
+    <h1>Priorização MoSCoW</h1>
+    <p class="subtitle">O método separa o que é obrigatório para a entrega do que agrega valor, mas pode ser retirado caso ameace o prazo de <b class="mono">16/09/2026</b>.</p>
+  </header>
+
+  <div class="quadrant">
+    <section class="m-section" data-tier="must">
+      <div class="m-head"><span class="m-title">Must have</span><span class="m-count">12 itens</span></div>
+      <p class="m-desc">Obrigatório para a entrega.</p>
+      <ul class="m-list" id="must"></ul>
+    </section>
+
+    <section class="m-section" data-tier="should">
+      <div class="m-head"><span class="m-title">Should have</span><span class="m-count">5 itens</span></div>
+      <p class="m-desc">Importante, implementado após o núcleo Must estar estável.</p>
+      <ul class="m-list" id="should"></ul>
+    </section>
+
+    <section class="m-section" data-tier="could">
+      <div class="m-head"><span class="m-title">Could have</span><span class="m-count">4 itens</span></div>
+      <p class="m-desc">Desejável, apenas se sobrar tempo e orçamento.</p>
+      <ul class="m-list" id="could"></ul>
+    </section>
+
+    <section class="m-section" data-tier="wont">
+      <div class="m-head"><span class="m-title">Won't have</span><span class="m-count">6 itens</span></div>
+      <p class="m-desc">Fora desta entrega — fica para uma versão futura.</p>
+      <ul class="m-list" id="wont"></ul>
+    </section>
+  </div>
+
+  <footer class="credit">
+    <span>Funcionalidades detalhadas em tarefas no <a href="Backlog.html">Backlog</a></span>
+    <span>4ESPY_CP1_Maker_Carrinho</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var DATA = {
+    must: [
+      ["M01","Movimentar-se para frente e para trás","Função básica do carrinho"],
+      ["M02","Virar à esquerda e à direita","Necessário para controle direcional"],
+      ["M03","Parar por comando do usuário","Requisito de controle e segurança"],
+      ["M04","Receber comandos sem fio pelo ESP32","Requisito central da proposta"],
+      ["M05","Detectar obstáculos com HC-SR04","Requisito funcional definido"],
+      ["M06","Parar automaticamente antes da colisão","Torna a detecção útil e segura"],
+      ["M07","Operar com alimentação por pilhas","Permite uso sem cabo conectado ao computador"],
+      ["M08","Utilizar dois motores e driver TB6612FNG","Arquitetura definitiva definida no projeto"],
+      ["M09","Possuir chassi impresso em 3D","Exigência física da atividade"],
+      ["M10","Possuir carenagem inspirada no WALL-E","Identidade visual proposta"],
+      ["M11","Manter componentes fixados e acessíveis","Evita falhas e permite manutenção"],
+      ["M12","Disponibilizar código, documentação e evidências","Necessário para avaliação e rastreabilidade"]
+    ],
+    should: [
+      ["S01","Controle proporcional de velocidade por PWM","Implementar após movimentos básicos estáveis"],
+      ["S02","Ajuste simples da distância mínima no código","Facilita calibração nos testes"],
+      ["S03","LED ou indicação visual de conexão/obstáculo","Melhora a demonstração e o diagnóstico"],
+      ["S04","Carenagem removível sem ferramentas complexas","Facilita manutenção"],
+      ["S05","Teste de autonomia de pelo menos 10 minutos","Confirma adequação da alimentação"]
+    ],
+    could: [
+      ["C01","Efeitos sonoros ou luzes decorativas","Somente se não afetar alimentação e prazo"],
+      ["C02","Movimento dos braços ou cabeça","Somente após validação completa do carrinho"],
+      ["C03","Diferentes modos de velocidade","Se o PWM estiver estável"],
+      ["C04","Acabamento com pintura e adesivos detalhados","Se houver tempo após a montagem final"]
+    ],
+    wont: [
+      ["W01","Navegação autônoma e desvio de rota","Amplia muito a complexidade do firmware"],
+      ["W02","Aplicativo móvel próprio","Um aplicativo controlador existente é suficiente"],
+      ["W03","Câmera e visão computacional","Fora do escopo e do orçamento"],
+      ["W04","Comandos por voz","Não contribui para o núcleo do CP1"],
+      ["W05","Mapeamento do ambiente","Exigiria sensores e algoritmos adicionais"],
+      ["W06","Esteiras mecânicas reais","A tração 2WD será apenas caracterizada visualmente"]
+    ]
+  };
+
+  Object.keys(DATA).forEach(function(tier){
+    var ul = document.getElementById(tier);
+    DATA[tier].forEach(function(item){
+      var li = document.createElement("li");
+      li.className = "m-item";
+      li.innerHTML =
+        '<span class="m-id">'+item[0]+'</span>'+
+        '<span class="m-body"><span class="m-name">'+item[1]+'</span><span class="m-note">'+item[2]+'</span></span>';
+      ul.appendChild(li);
+    });
+  });
+})();
+</script>
+</body>
+</html>
