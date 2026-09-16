@@ -40,6 +40,8 @@ O sensor HC-SR04 fica embutido na face frontal e a tampa dianteira abre para bai
 
 Mais fotos em [`imagens/robo-final/`](imagens/robo-final).
 
+🎥 **Vídeos do funcionamento:** [1](<vídeo/funcionamento-1.mp4>) · [2](<vídeo/funcionamento-2.mp4>) · [3](<vídeo/funcionamento-3.mp4>) · [4](<vídeo/funcionamento-4.mp4>) — o robô em operação, comandado pelo controle PS5. A demonstração do sensor de aproximação está em [`vídeo/Motor + Sensor de Aproximação.mp4`](<vídeo/Motor + Sensor de Aproximação.mp4>).
+
 ## Especificações
 
 | Item | Valor |

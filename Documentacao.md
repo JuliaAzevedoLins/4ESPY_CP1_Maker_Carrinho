@@ -1176,14 +1176,18 @@ Na vista frontal aparecem os dois transdutores do **HC-SR04** embutidos na tampa
 
 A tampa frontal abre para baixo e expõe todo o conjunto: os **dois motores DC** alinhados pela travessa interna, a **placa de ligações** com os jumpers, o **suporte de pilhas** e o **HC-SR04** fixado na parte inferior da tampa. Nenhuma outra peça precisa ser removida — é a comprovação prática do requisito RFIS06.
 
-### 28.3 Vídeos
+### 28.3 Vídeos do funcionamento
+
+Quatro registros do robô finalizado em operação, somando cerca de um minuto. Como o robô **só se move sob comando do controle**, todos eles são também demonstração do controle remoto sem fio em uso.
 
 | Vídeo | Duração |
 |---|---|
-| [`vídeo/final-1.mp4`](<vídeo/final-1.mp4>) | 17 s |
-| [`vídeo/final-2.mp4`](<vídeo/final-2.mp4>) | 10 s |
-| [`vídeo/final-3.mp4`](<vídeo/final-3.mp4>) | 17 s |
-| [`vídeo/final-4.mp4`](<vídeo/final-4.mp4>) | 14 s |
+| [`vídeo/funcionamento-1.mp4`](<vídeo/funcionamento-1.mp4>) | 17 s |
+| [`vídeo/funcionamento-2.mp4`](<vídeo/funcionamento-2.mp4>) | 10 s |
+| [`vídeo/funcionamento-3.mp4`](<vídeo/funcionamento-3.mp4>) | 17 s |
+| [`vídeo/funcionamento-4.mp4`](<vídeo/funcionamento-4.mp4>) | 14 s |
+
+A demonstração específica do **sensor de aproximação** está no vídeo da etapa de bancada, [`vídeo/Motor + Sensor de Aproximação.mp4`](<vídeo/Motor + Sensor de Aproximação.mp4>) (seção 21.2), no qual os motores param automaticamente quando o HC-SR04 detecta um objeto à frente. A mesma lógica, com a distância mínima de 20 cm, está no firmware final (seção 24.4).
 
 > O GitHub não reproduz vídeo dentro da página do Markdown. Ao clicar no link, o GitHub abre a página do arquivo `.mp4` e exibe um player nativo com botão de play.
 
