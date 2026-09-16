@@ -2,7 +2,7 @@
 
 <img src="imagens/Wall-e.png" alt="WALL-E" width="180">
 
-Carrinho robótico físico e funcional, construído sobre um corpo impresso em 3D inspirado no personagem WALL-E (Pixar). O robô se movimenta por **duas esteiras** tracionadas por motores DC independentes, é pilotado à distância por um **controle PS5 DualSense** via Bluetooth e detecta obstáculos com um **sensor ultrassônico HC-SR04**, que bloqueia automaticamente o avanço diante de uma colisão iminente.
+Carrinho robótico físico e funcional, construído sobre um corpo impresso em 3D inspirado no personagem WALL-E (Pixar). O robô se movimenta por **duas rodas** acionadas por motores DC independentes, é pilotado à distância por um **controle PS5 DualSense** via Bluetooth e detecta obstáculos com um **sensor ultrassônico HC-SR04**, que bloqueia automaticamente o avanço diante de uma colisão iminente.
 
 - **Turma:** 4ESPY
 - **Avaliação:** CP1
@@ -21,22 +21,24 @@ Desenvolver um carrinho robótico funcional que integre projeto mecânico, fabri
 
 | Funcionalidade | Como funciona |
 |---|---|
-| **Locomoção diferencial** | Dois motores DC independentes tracionam duas esteiras em TPU. Frente, ré, curvas e giro sobre o próprio eixo |
+| **Locomoção diferencial** | Dois motores DC independentes acionam as rodas laterais. Frente, ré, curvas e giro sobre o próprio eixo |
 | **Controle sem fio** | Controle PS5 DualSense por Bluetooth clássico (biblioteca Bluepad32). Stick esquerdo: avanço/ré. Stick direito: giro |
 | **Velocidade proporcional** | PWM de 1 kHz com rampa de aceleração suave. Os gatilhos **R2/L2** ajustam a velocidade máxima em tempo real |
 | **Freio de segurança** | O HC-SR04 bloqueia o avanço a menos de 20 cm de um obstáculo — mantendo ré e giro liberados, para o robô nunca ficar preso |
 | **Calibração pelo celular** | O ESP32 serve uma página web com sliders que compensam a diferença de rotação entre os motores. Valores salvos na memória interna |
 | **Atualização OTA** | Depois da primeira gravação por cabo, o firmware é atualizado pela rede Wi-Fi — sem abrir o corpo impresso |
 
-## O carrinho
+## O carrinho finalizado
 
-> 📷 **A inserir:** foto do carrinho finalizado.
+<img src="imagens/robo-final/2-vista-tres-quartos.jpeg" alt="Carrinho robótico WALL-E finalizado" width="420">
 
-Enquanto isso, os renders das chapas de impressão dão a forma do robô:
-
-| | | |
+| Vista frontal | Vista lateral | Eletrônica interna |
 |---|---|---|
-| ![Chapa 1](<Modelo 3d/renders/chapa-01.png>) | ![Chapa 2](<Modelo 3d/renders/chapa-02.png>) | ![Chapa 4](<Modelo 3d/renders/chapa-04.png>) |
+| ![Vista frontal](imagens/robo-final/1-vista-frontal.jpeg) | ![Vista lateral](imagens/robo-final/4-vista-lateral.jpeg) | ![Compartimento aberto](imagens/robo-final/6-eletronica-compartimento-aberto.jpeg) |
+
+O sensor HC-SR04 fica embutido na face frontal e a tampa dianteira abre para baixo, dando acesso aos motores, à ponte H, ao ESP32 e às pilhas sem desmontar nada. O acabamento inclui pintura de desgaste, faixa preta no topo e adesivos ("WALL·E", painel de carregamento solar e etiquetas de advertência).
+
+Mais fotos em [`imagens/robo-final/`](imagens/robo-final).
 
 ## Especificações
 
@@ -45,7 +47,7 @@ Enquanto isso, os renders das chapas de impressão dão a forma do robô:
 | Microcontrolador | ESP32 Dev Module (Bluetooth clássico) |
 | Driver de motores | Ponte H dupla, 4 entradas em PWM |
 | Motores | 2 × DC TT com caixa de redução |
-| Tração | 2WD diferencial, esteiras em TPU 95A |
+| Tração | 2WD diferencial, 2 rodas laterais + apoio frontal impresso |
 | Sensor | HC-SR04 frontal, detecção a 20 cm |
 | Controle | PS5 DualSense (Bluepad32) |
 | Alimentação | 4 × pilhas AA com chave liga/desliga |
@@ -89,8 +91,9 @@ Instruções completas (calibração, gravação do firmware e solução de prob
 │   └── README.md                      # índice dos entregáveis e equipe
 │
 ├── croqui/                       # croqui da concepção inicial
-├── imagens/                      # fotos da montagem e dos testes
-└── vídeo/                        # vídeos dos testes
+├── imagens/                      # fotos do projeto
+│   └── robo-final/                    # fotos do robô finalizado
+└── vídeo/                        # vídeos dos testes e da demonstração final
 ```
 
 ## Documentação
@@ -119,7 +122,8 @@ Os artefatos de planejamento (MVP, MoSCoW, backlog, dependências, kanban e cust
 - [x] Diagrama de blocos e de alimentação, validados em bancada
 - [x] Testes de bancada: motores, sensor de aproximação e controle sem fio
 - [x] Modelagem 3D: adaptação do corpo, extensor de eixo, roda boba e travessa interna
-- [x] Impressão 3D de todas as peças (16 chapas, PLA + TPU)
+- [x] Impressão 3D de todas as peças do corpo, dos braços, da cabeça e dos conjuntos laterais
 - [x] Migração para ESP32 com controle PS5, calibração web e OTA
 - [x] Integração final: mecânica + eletrônica + firmware
-- [ ] Fotos do robô finalizado e vídeos da demonstração final
+- [x] Acabamento: pintura de desgaste, faixa preta e adesivos
+- [x] Fotos do robô finalizado e vídeos da demonstração
