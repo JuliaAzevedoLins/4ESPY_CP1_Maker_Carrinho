@@ -483,10 +483,10 @@
       <div>
         <p class="eyebrow">4ESPY_CP1 · Maker Carrinho</p>
         <h1>Kanban WALL·E</h1>
-        <p class="subtitle">Quadro do <a href="Backlog.html">Backlog</a> do carrinho autônomo ESP32 — cada tarefa tem um cartão só, movido entre colunas conforme o trabalho avança.</p>
+        <p class="subtitle">Quadro do <a href="Backlog.html">Backlog</a> do carrinho ESP32 — cada tarefa tem um cartão só, movido entre colunas conforme o trabalho avança.</p>
       </div>
       <div class="updated">
-        <span>Atualizado em <b>26/08/2026</b></span>
+        <span>Atualizado em <b>16/09/2026</b></span>
         <span>Ciclo <b>26/08 → 16/09</b></span>
       </div>
     </div>
@@ -530,7 +530,7 @@
         <span class="column-count">0 cartões</span>
       </div>
       <div class="column-note">Aguarda checagem do critério de aceite</div>
-      <div class="column-body"><p class="empty-state">Nenhuma tarefa aguardando validação<br>na data de criação deste quadro.</p></div>
+      <div class="column-body"><p class="empty-state">Nenhuma tarefa aguardando validação:<br>tudo que foi testado já passou ao Concluído.</p></div>
     </section>
 
     <section class="column" data-col="done">
@@ -593,34 +593,34 @@
   ];
 
   var TASKS = [
-    ["B01","Confirmar componentes definitivos e tensão das pilhas","Felipe","must",2,"27/08"],
-    ["B02","Atualizar e aprovar orçamento","Luis","must",2,"28/08"],
-    ["B03","Comprar/separar componentes faltantes","Guilherme","must",2,"28/08"],
-    ["B04","Medir componentes reais e pontos de fixação","Victor","must",3,"29/08"],
-    ["B09","Migrar controle de motores para ESP32/TB6612","Julia","must",5,"02/09"],
-    ["B10","Implementar comunicação sem fio no ESP32","Julia","must",5,"04/09"],
-    ["B12","Montar circuito elétrico definitivo","Felipe","must",5,"06/09"],
-    ["B13","Integrar firmware, motores, sensor e pilhas","Julia","must",5,"07/09"],
-    ["B14","Executar e registrar teste do MVP","Luis","must",3,"09/09"],
-    ["B15","Corrigir falhas encontradas no MVP","Julia","must",3,"11/09"],
-    ["B16","Fixar componentes, motores, rodas e caster","Felipe","must",5,"12/09"],
-    ["B17","Construir e instalar carenagem do WALL-E","Guilherme","must",5,"13/09"],
-    ["B18","Calibrar movimento, curvas e distância mínima","Guilherme","should",3,"14/09"],
-    ["B19","Realizar teste final e gravar demonstração","Luis","must",3,"15/09"],
-    ["B20","Consolidar documentação e organizar GitHub","Julia","must",5,"15/09"],
-    ["B21","Preparar roteiro curto e plano de contingência","Luis","should",2,"15/09"],
     ["B22","Apresentar e entregar o CP1","Todos","must",2,"16/09"]
   ];
 
   var DOING = [
-    ["B07","Fatiar e imprimir protótipo/chassi final","Victor","must",5,"07/09","Impressão 3D em andamento"]
+    ["B19","Realizar teste final e gravar demonstração","Luis","must",3,"16/09","Faltam os vídeos finais"],
+    ["B21","Preparar roteiro curto e plano de contingência","Luis","should",2,"16/09"]
   ];
 
   var DONE_CYCLE = [
-    ["B05","Modelar chassi 3D com suportes e acesso","Victor","must",5,"02/09"],
+    ["B01","Confirmar componentes definitivos e tensão das pilhas","Felipe","must",2,"27/08"],
+    ["B02","Atualizar e aprovar orçamento","Luis","must",2,"28/08"],
+    ["B03","Comprar/separar componentes faltantes","Guilherme","must",2,"28/08"],
+    ["B04","Medir componentes reais e pontos de fixação","Victor","must",3,"29/08"],
+    ["B05","Modelar corpo 3D com suportes e acesso interno","Victor","must",5,"02/09"],
     ["B06","Revisar modelo 3D com a montagem elétrica","Victor","must",2,"03/09"],
-    ["B08","Definir pinagem ESP32 + TB6612FNG + HC-SR04","Julia","must",3,"30/08"],
-    ["B11","Integrar HC-SR04 e parada de segurança","Julia","must",3,"05/09"]
+    ["B07","Fatiar e imprimir corpo e peças finais","Victor","must",5,"07/09"],
+    ["B08","Definir pinagem ESP32 + ponte H + HC-SR04","Julia","must",3,"30/08"],
+    ["B09","Migrar controle de motores para o ESP32","Julia","must",5,"02/09"],
+    ["B10","Implementar comunicação sem fio no ESP32","Julia","must",5,"04/09"],
+    ["B11","Integrar HC-SR04 e parada de segurança","Julia","must",3,"05/09"],
+    ["B12","Montar circuito elétrico definitivo","Felipe","must",5,"06/09"],
+    ["B13","Integrar firmware, motores, sensor e pilhas","Julia","must",5,"07/09"],
+    ["B14","Executar e registrar teste do MVP","Luis","must",3,"09/09"],
+    ["B15","Corrigir falhas encontradas no MVP","Julia","must",3,"11/09"],
+    ["B16","Fixar componentes, motores, esteiras e roda boba","Felipe","must",5,"12/09"],
+    ["B17","Integrar carenagem ao corpo impresso","Guilherme","must",5,"13/09"],
+    ["B18","Calibrar movimento, curvas e distância mínima","Guilherme","should",3,"14/09"],
+    ["B20","Consolidar documentação e organizar GitHub","Julia","must",5,"15/09"]
   ];
 
   // workload bars

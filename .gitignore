@@ -1,0 +1,18 @@
+# Credenciais de rede do firmware -- NUNCA commitar
+Códigos/secrets.h
+secrets.h
+
+# Artefatos de build do Arduino IDE
+build/
+*.hex
+*.bin
+*.elf
+
+# Slicer
+*.gcode
+*.gcode.3mf
+
+# Sistema operacional
+Thumbs.db
+desktop.ini
+.DS_Store

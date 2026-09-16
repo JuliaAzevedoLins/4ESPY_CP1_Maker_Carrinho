@@ -23,9 +23,23 @@
 
 ## 2. Descrição do Projeto
 
-O presente documento apresenta a documentação técnica referente à primeira etapa (PT1) do Checkpoint 1 (CP1) do projeto **Carrinho Robótico WALL-E**, desenvolvido no contexto da disciplina de Maker. O projeto consiste na concepção e, posteriormente, na construção de um carrinho robótico físico, composto por um chassi estrutural produzido por impressão 3D e por uma carenagem estética inspirada visualmente no personagem WALL-E.
+O projeto **Carrinho Robótico WALL-E** consiste em um carrinho robótico físico e funcional, desenvolvido na disciplina de Project-based Maker Lab. O robô é construído sobre um corpo impresso em 3D inspirado no personagem WALL-E (Pixar), movimenta-se por meio de duas esteiras tracionadas por motores DC independentes, é comandado à distância por um controle **PS5 DualSense** via Bluetooth e detecta obstáculos com um sensor ultrassônico **HC-SR04**, que bloqueia automaticamente o avanço diante de uma colisão iminente.
 
-Nesta etapa inicial, o foco é a definição da ficha de requisitos do projeto, contemplando dimensões planejadas, quantidade de motores, placa controladora, posicionamento dos componentes eletrônicos e o croqui esquemático do chassi. A construção física, a integração eletrônica completa e os testes funcionais serão tratados em etapas subsequentes do projeto.
+O projeto atravessou três etapas: concepção e ficha de requisitos (seções 1 a 19), montagem e testes de bancada (seções 20 e 21) e integração da versão final entregue (seções 23 a 28).
+
+---
+
+### Como ler este documento
+
+Este documento é **cumulativo**: ele preserva o registro de cada etapa, inclusive das decisões que foram depois revistas, porque a evolução do projeto faz parte da entrega.
+
+| Seções | O que contêm | Status |
+|---|---|---|
+| 1 a 19 | Concepção inicial, ficha de requisitos, croqui | Atualizadas para a versão final; onde a concepção foi superada, o texto indica o que mudou e por quê |
+| 20 e 21 | Montagem de bancada e testes com Arduino Uno | **Registro histórico** — não descrevem o robô entregue |
+| 23 a 28 | Versão final: modelagem 3D, eletrônica, firmware, testes, uso e evidências | **Descrevem o robô entregue** |
+
+Em caso de divergência, **valem as seções 23 a 28**.
 
 ---
 
@@ -42,34 +56,39 @@ Desenvolver um carrinho robótico funcional, inspirado visualmente no personagem
 
 ## 4. Escopo
 
-O escopo desta entrega (PT1 - CP1) compreende exclusivamente a documentação técnica preliminar do projeto, incluindo:
+O escopo do projeto compreende o robô completo, entregue e funcional:
 
-- Ficha de requisitos (dimensões, quantidade de motores, placa controladora, posição dos componentes e croqui do chassi);
-- Requisitos funcionais e físicos preliminares;
-- Especificações técnicas já definidas até o momento;
-- Indicação explícita dos parâmetros técnicos ainda pendentes de definição.
+- Ficha de requisitos, requisitos funcionais e físicos;
+- Projeto mecânico: adaptação, modelagem e impressão 3D do corpo, das peças de acoplamento e da roda boba;
+- Montagem elétrica: microcontrolador, ponte H, motores, sensor e alimentação por pilhas;
+- Firmware do ESP32: controle diferencial dos motores, comunicação sem fio com o controle PS5 e leitura do sensor de distância;
+- Testes funcionais de locomoção, comunicação remota e detecção de obstáculos;
+- Documentação de todo o processo neste repositório.
 
-Não fazem parte do escopo desta etapa: a construção física do chassi e da carenagem, a montagem elétrica, a programação da placa controladora e os testes de campo, os quais serão conduzidos em etapas posteriores do projeto.
+Não fazem parte do escopo: navegação autônoma (o robô só se move sob comando do controle), mapeamento de ambiente e uso de bateria recarregável.
 
 ---
 
 ## 5. Ficha de Requisitos
 
-| Item | Especificação | Status |
+A tabela abaixo apresenta a **ficha final**, com o que foi planejado e o que efetivamente ficou no robô entregue.
+
+| Item | Planejado (concepção) | **Final (entregue)** |
 |---|---|---|
-| Dimensões do chassi | 220 mm (comprimento) × 140 mm (largura) | Planejado, sujeito a ajuste |
-| Altura aproximada do chassi | 35 mm | Planejado, sujeito a ajuste |
-| Quantidade de motores | 2 motores DC com caixa de redução | Definido |
-| Configuração de tração | 2WD (tração diferencial) | Definido |
-| Placa controladora | ESP32 | Definido |
-| Driver de motores | TB6612FNG | Definido |
-| Sensor de distância | HC-SR04 | Definido |
-| Rodas motrizes | 2 unidades | Definido |
-| Roda de apoio | 1 roda caster | Definido |
-| Pilhas | Não recarregáveis, posição central/inferior | Quantidade, modelo e tensão a definir |
-| Controle remoto | Sem fio, via recursos do ESP32 (Bluetooth ou Wi-Fi) | Modelo a definir |
-| Material do chassi | Impressão 3D | Definido |
-| Material da carenagem | A definir dentre papel, papel cartão, papelão, MDF, acrílico, plástico ou peças impressas em 3D | Pendente de definição |
+| Dimensões do corpo | 220 × 140 mm, altura 35 mm | **204,4 × 126,0 × 77,7 mm** |
+| Quantidade de motores | 2 motores DC com caixa de redução | 2 motores DC TT com caixa de redução ✔ |
+| Configuração de tração | 2WD (tração diferencial) | 2WD diferencial, por **esteiras** ✔ |
+| Placa controladora | ESP32 | ESP32 Dev Module ✔ |
+| Driver de motores | TB6612FNG | **Ponte H dupla L298N** (ver nota) |
+| Sensor de distância | HC-SR04 | HC-SR04, frontal ✔ |
+| Elemento de tração | 2 rodas motrizes | **2 esteiras em TPU 95A** com roda dentada |
+| Roda de apoio | 1 roda caster | Roda boba traseira modelada pela equipe ✔ |
+| Alimentação | Pilhas não recarregáveis, posição central/inferior | 4 × pilhas AA em suporte com chave liga/desliga |
+| Controle remoto | Sem fio, via recursos do ESP32 | **Controle PS5 DualSense**, Bluetooth clássico via Bluepad32 |
+| Material do chassi | Impressão 3D | Impressão 3D em PLA ✔ |
+| Material da carenagem | A definir | **Não há peça separada** — o corpo impresso é chassi e carenagem |
+
+> **Nota sobre a ponte H.** O firmware oficial aciona os motores por **quatro entradas de controle com PWM direto** (`IN1`–`IN4`), sem pinos de *enable* ou *standby* separados. Essa é a ligação típica de um **L298N** com os jumpers ENA/ENB fechados — módulo já validado na montagem de bancada (seção 20) e presente na planilha de custos. Um TB6612FNG exigiria a topologia `PWMA`/`AIN1`/`AIN2`/`STBY`, que **não** corresponde ao código entregue. Caso a equipe tenha substituído o módulo na montagem final, basta atualizar esta linha e a tabela de pinagem da seção 24.2 — a lógica do firmware não muda.
 
 ---
 
@@ -103,46 +122,57 @@ Não fazem parte do escopo desta etapa: a construção física do chassi e da ca
 
 ### 8.1 Parâmetros definidos
 
-- Placa controladora: ESP32, responsável pelo processamento dos comandos, controle dos motores, comunicação sem fio e leitura do sensor de distância;
-- Driver de motores: TB6612FNG, responsável pelo acionamento dos dois motores DC;
-- Sensor de distância: HC-SR04, para detecção de obstáculos;
-- Configuração de tração: 2WD, com direção por controle diferencial entre os dois motores laterais;
-- Comunicação: sem fio, utilizando os recursos nativos de conectividade do ESP32 (Bluetooth ou Wi-Fi).
+- **Placa controladora:** ESP32 Dev Module — processa os comandos, aciona os motores, mantém a comunicação sem fio e lê o sensor de distância. Exige chip com **Bluetooth clássico**; variantes somente-BLE (S2, S3, C3, C6) não funcionam com a biblioteca utilizada;
+- **Driver de motores:** ponte H dupla com quatro entradas de controle (L298N), acionada por PWM direto nas quatro entradas;
+- **Sensor de distância:** HC-SR04, montado na face frontal do corpo;
+- **Configuração de tração:** 2WD diferencial — cada esteira é tracionada por um motor independente;
+- **Comunicação:** Bluetooth clássico com controle PS5 DualSense, via biblioteca **Bluepad32**;
+- **Rede Wi-Fi (auxiliar):** o ESP32 também se conecta a uma rede Wi-Fi para permitir atualização de firmware por **OTA** e uma **página web de calibração** dos motores.
 
-### 8.2 Parâmetros pendentes de especificação
+### 8.2 Parâmetros definidos durante a execução
 
-Os seguintes parâmetros técnicos ainda não foram definidos e **não devem ser considerados valores finais**:
+Os parâmetros abaixo estavam pendentes na concepção e foram **fechados durante a implementação**. Os valores são os que estão efetivamente no firmware entregue (`Códigos/PS5_ESP32_Bluepad32.ino`).
 
-- Quantidade, modelo e tensão das pilhas;
-- Modelo exato dos motores DC;
-- Dimensões das rodas motrizes e da roda caster;
-- Velocidade de deslocamento;
-- Autonomia do sistema;
-- Peso total do robô;
-- Corrente de operação;
-- Torque dos motores;
-- Modelo do controle remoto;
-- Distância exata de detecção de obstáculos pelo sensor HC-SR04;
-- Dimensões finais da carenagem.
-
-Esses itens serão definidos em etapas posteriores do projeto, à medida que os testes elétricos e mecânicos forem realizados.
+| Parâmetro | Valor final | Onde foi definido |
+|---|---|---|
+| Alimentação | 4 × pilhas AA alcalinas, suporte com chave liga/desliga | Planilha de custos |
+| Modelo dos motores | Motor DC TT 3–6 V com caixa de redução, eixo duplo | Planilha de custos |
+| Elemento de tração | Esteiras em TPU 95A, tracionadas por roda dentada de Ø22,4 mm | Modelagem 3D |
+| Roda de apoio | Roda boba de 86 × 36 × 15 mm, modelada pela equipe | Modelagem 3D |
+| Controle remoto | PS5 DualSense, Bluetooth clássico | Firmware |
+| Distância de detecção | **20 cm** (`DISTANCIA_MIN_CM`) | Firmware |
+| Alcance útil do sensor | ~2,5 m (timeout de 15 ms no `pulseIn`) | Firmware |
+| Frequência de leitura do sensor | 1 leitura a cada 60 ms | Firmware |
+| Velocidade máxima | PWM 200/255 no arranque, ajustável de 80 a 255 pelos gatilhos R2/L2 | Firmware |
+| Frequência do PWM | 1 kHz, resolução de 8 bits | Firmware |
+| Zona morta dos analógicos | 80 unidades (~15% do curso do stick) | Firmware |
+| Rampa de aceleração | Incremento de 12 unidades a cada 15 ms | Firmware |
+| Peso e autonomia | Não medidos — ver seção 25.4 | — |
 
 ---
 
 ## 9. Lista de Componentes
 
-| Componente | Quantidade | Função |
-|---|---|---|
-| Chassi impresso em 3D | 1 | Estrutura de sustentação dos componentes |
-| Motor DC com caixa de redução | 2 | Tração das rodas motrizes |
-| Roda motriz | 2 | Locomoção do robô |
-| Roda caster | 1 | Apoio e estabilização |
-| Placa controladora ESP32 | 1 | Processamento, controle e comunicação sem fio |
-| Driver de motor TB6612FNG | 1 | Acionamento dos dois motores DC |
-| Sensor de distância HC-SR04 | 1 | Detecção de obstáculos |
-| Pilhas | Quantidade a definir | Alimentação elétrica do sistema (modelo e tensão a definir) |
-| Controle remoto sem fio | 1 | Envio de comandos ao robô (modelo a definir) |
-| Carenagem externa | 1 | Revestimento estético inspirado no WALL-E (material a definir) |
+| Componente | Qtd. | Função | Origem |
+|---|---|---|---|
+| Corpo do WALL-E impresso em 3D | 1 | Estrutura e carenagem, em peça única | Impresso (PLA) |
+| Esteira em TPU 95A | 2 | Elemento de tração | Impresso (TPU) |
+| Roda dentada (tração) | 2 | Transmite o torque do motor à esteira | Impresso |
+| Roda dianteira / traseira da esteira | 4 | Guiam e tensionam a esteira | Impresso |
+| Track frame (chassi da esteira) | 2 | Sustenta o conjunto de esteira | Impresso |
+| **Extensor de eixo** | 2 | Acopla o eixo do motor à roda dentada | **Modelado pela equipe** |
+| **Roda boba (caster)** | 1 | Terceiro ponto de apoio, traseiro | **Modelada pela equipe** |
+| **Travessa interna** | 1 | Alinha e sustenta os motores dentro do corpo | **Modelada pela equipe** |
+| Motor DC TT com caixa de redução | 2 | Tração das esteiras | Comercial |
+| Placa controladora ESP32 Dev Module | 1 | Processamento, controle e comunicação sem fio | Comercial |
+| Ponte H dupla (L298N) | 1 | Acionamento dos dois motores DC | Comercial |
+| Sensor ultrassônico HC-SR04 | 1 | Detecção de obstáculos | Comercial |
+| Suporte de pilhas 4 × AA com chave | 1 | Alimentação do sistema | Comercial |
+| Pilhas AA alcalinas | 4 | Fonte de energia | Comercial |
+| Controle PS5 DualSense | 1 | Envio de comandos ao robô | Comercial |
+| Jumpers e cabos | — | Ligações entre os módulos | Comercial |
+
+Peças impressas, dimensões e parâmetros de impressão estão detalhados em [`Modelo 3d/README.md`](<Modelo 3d/README.md>). Preços, links e status de compra estão na [planilha de custos](<Organização/Resumo-Planilha-de-custos.html>).
 
 ---
 
@@ -150,24 +180,29 @@ Esses itens serão definidos em etapas posteriores do projeto, à medida que os 
 
 ```mermaid
 flowchart TD
-    CTRL[Controle Remoto Sem Fio] -- comando via Bluetooth/Wi-Fi --> ESP32[Placa Controladora ESP32]
-    HCSR04[Sensor de Distancia HC-SR04] -- leitura de distancia --> ESP32
-    ESP32 -- sinais de controle --> TB6612[Driver de Motores TB6612FNG]
-    TB6612 -- acionamento --> MOTORE[Motor Esquerdo]
-    TB6612 -- acionamento --> MOTORD[Motor Direito]
-    BAT[Pilhas] -- alimentacao --> ESP32
-    BAT -- alimentacao --> TB6612
-    MOTORE --> RODAE[Roda Motriz Esquerda]
-    MOTORD --> RODAD[Roda Motriz Direita]
+    PS5[Controle PS5 DualSense] -- Bluetooth classico / Bluepad32 --> ESP32[ESP32 Dev Module]
+    HCSR04[Sensor HC-SR04] -- TRIG/ECHO --> ESP32
+    CEL[Celular ou PC no mesmo Wi-Fi] -- HTTP: calibracao e OTA --> ESP32
+    ESP32 -- IN1 IN2 IN3 IN4 em PWM --> PONTEH[Ponte H dupla L298N]
+    PONTEH -- acionamento --> MOTORE[Motor Esquerdo]
+    PONTEH -- acionamento --> MOTORD[Motor Direito]
+    MOTORE --> ESTE[Esteira Esquerda]
+    MOTORD --> ESTD[Esteira Direita]
+    BAT[4x Pilhas AA] -- alimentacao --> PONTEH
+    BAT -- alimentacao --> ESP32
 ```
 
-A arquitetura descreve o fluxo lógico de informação e energia entre os componentes: o ESP32 atua como unidade central de processamento, recebendo comandos do controle remoto e dados do sensor de distância, e enviando sinais de controle ao driver TB6612FNG, responsável pelo acionamento independente de cada motor.
+O ESP32 é a unidade central: recebe os comandos do controle DualSense por Bluetooth clássico, lê continuamente o sensor de distância e converte as duas informações em sinais PWM para a ponte H, que aciona cada motor de forma independente.
+
+Em paralelo, e sem interferir na pilotagem, o ESP32 mantém uma conexão Wi-Fi que serve a dois propósitos de apoio: **atualização de firmware por OTA** (sem cabo) e uma **página web de calibração** dos motores. Se a rede Wi-Fi não estiver disponível, o robô continua funcionando normalmente pelo controle — apenas esses dois recursos auxiliares ficam indisponíveis.
 
 ---
 
 ## 11. Distribuição dos Componentes no Chassi
 
-A distribuição prevista dos componentes segue a organização esquemática abaixo (vista superior), podendo ser refinada durante a modelagem tridimensional do chassi:
+> 📌 **Registro da concepção.** O esquema abaixo foi elaborado quando o projeto previa um chassi plano de 220 × 140 mm. Com a adoção do corpo do WALL-E como estrutura, a distribuição real dos componentes mudou — ela está descrita na **seção 23.4**. O esquema é mantido como registro da etapa de concepção.
+
+A distribuição prevista dos componentes seguia a organização esquemática abaixo (vista superior):
 
 ```
                           FRENTE
@@ -203,7 +238,9 @@ A distribuição prevista dos componentes segue a organização esquemática aba
 
 ## 12. Dimensões Previstas
 
-Tabela de referência com as dimensões típicas dos componentes previstos (modelos ainda não definidos oficialmente), utilizada como base para a atividade em aula de acordo com valores da Internet.
+> 📌 **Registro da concepção.** Tabela levantada em aula com dimensões típicas de mercado, quando os modelos ainda não estavam definidos. As dimensões reais das peças impressas estão na **seção 23.2**.
+
+Tabela de referência com as dimensões típicas dos componentes previstos, utilizada como base para a atividade em aula de acordo com valores da Internet.
 
 | Componente | Comprimento | Largura | Altura | Forma de Fixação |
 |---|---|---|---|---|
@@ -212,51 +249,73 @@ Tabela de referência com as dimensões típicas dos componentes previstos (mode
 | ESP32 (DevKit V1) | ~55 mm | ~28 mm | ~13 mm | Encaixe em soquetes/pinos ou fixação com parafusos M3 + espaçadores (standoffs), posição central-superior |
 | Ponte H (TB6612FNG) | ~20 mm | ~22 mm | ~5 mm | Fixação com parafusos M2/M3 + espaçadores, próxima aos motores |
 
-**Observação:** os valores acima são medidas de referência de mercado para os modelos mais comuns (motor DC TT com caixa de redução, ESP32 DevKit V1 e módulo TB6612FNG). Como o modelo exato de cada componente ainda está pendente de definição (seção 8.2), esses valores não devem ser considerados finais.
+**Observação:** os valores acima eram medidas de referência de mercado, levantadas quando o modelo exato de cada componente ainda não estava definido. Os parâmetros foram fechados durante a execução (seção 8.2) e as dimensões reais das peças impressas estão na seção 23.2.
 
 ---
 
 ## 13. Descrição do Funcionamento
 
-O funcionamento do carrinho robótico é baseado na seguinte lógica operacional:
+O funcionamento do carrinho robótico segue a lógica operacional abaixo, implementada no firmware entregue:
 
-1. O usuário envia comandos de movimento por meio do controle remoto sem fio;
-2. O ESP32 recebe os comandos via comunicação sem fio (Bluetooth ou Wi-Fi);
-3. Simultaneamente, o ESP32 realiza a leitura contínua do sensor de distância HC-SR04, posicionado na parte frontal do robô;
-4. Com base nos comandos recebidos e na leitura de distância, o ESP32 envia sinais de controle ao driver TB6612FNG;
-5. O TB6612FNG aciona os dois motores DC de forma independente, permitindo deslocamento para frente, para trás e curvas por controle diferencial;
-6. Caso um obstáculo seja detectado a uma distância previamente definida (parâmetro ainda pendente de especificação), o sistema deve interromper ou modificar o movimento em curso, conforme RF06. O robô não possui navegação autônoma: a movimentação é sempre iniciada por comando do controle remoto sem fio, cabendo ao ESP32 processar esse comando em conjunto com a leitura do HC-SR04; a reação específica diante do obstáculo (parada total, redução de velocidade ou bloqueio do comando em curso) será definida na etapa de implementação do firmware.
+1. O usuário comanda o robô pelo **controle PS5 DualSense**: o stick esquerdo (eixo Y) define avanço e ré; o stick direito (eixo X) define o giro;
+2. O ESP32 recebe esses comandos por Bluetooth clássico, através da biblioteca Bluepad32;
+3. Em paralelo, o ESP32 lê o **HC-SR04** a cada 60 ms, obtendo a distância até o obstáculo mais próximo à frente;
+4. Os valores dos sticks passam por uma **zona morta** de ~15%, que descarta o ruído de repouso do analógico, e são convertidos em dois valores de potência por **mistura diferencial**: `motor A = avanço + giro` e `motor B = avanço − giro`;
+5. Antes de chegar aos motores, esses valores passam por uma **rampa de aceleração** (12 unidades a cada 15 ms), que suaviza o arranque e evita que o robô empine ou derrape a esteira;
+6. O resultado é aplicado como **PWM** nas quatro entradas da ponte H, que aciona os dois motores de forma independente — permitindo frente, ré, curvas e giro sobre o próprio eixo;
+7. **Freio de segurança (RF05 e RF06):** se o sensor acusar obstáculo a menos de **20 cm**, o firmware zera apenas o componente de avanço. A ré e o giro continuam liberados, de modo que o robô nunca fica preso contra um obstáculo — o usuário consegue sempre manobrar para sair.
+
+O robô **não possui navegação autônoma**: todo movimento parte de um comando do controle. O sensor atua exclusivamente como trava de proteção sobre esse comando.
 
 ---
 
 ## 14. Descrição do Chassi
 
-O chassi corresponde à estrutura inferior e funcional do robô, responsável por sustentar os componentes eletrônicos, os motores, as rodas e a carenagem. Suas principais características previstas são:
+### 14.1 Concepção inicial
 
-- Produção por impressão 3D, conforme RFIS02;
-- Dimensões planejadas de 220 mm × 140 mm, com altura aproximada de 35 mm;
-- Espaço interno reservado para acomodar a placa ESP32, o driver TB6612FNG, as pilhas e a fiação;
-- Pontos de fixação para os dois motores DC, posicionados nas laterais traseiras;
-- Suporte para as duas rodas motrizes e para a roda caster de apoio;
-- Estrutura preparada para a instalação da carenagem em sua parte superior, sem comprometer o acesso aos componentes internos para eventual manutenção.
+O projeto previa inicialmente um **chassi plano** de 220 × 140 × 35 mm, impresso em 3D, sobre o qual seria montada uma carenagem estética separada, inspirada no WALL-E.
+
+### 14.2 Solução adotada
+
+Durante a modelagem, a equipe concluiu que o corpo do WALL-E — retangular, oco e com esteiras laterais — **já era, em si, um chassi**. Manter uma placa plana embaixo dele significaria duplicar estrutura, aumentar peso e elevar o centro de gravidade sem ganho nenhum.
+
+A decisão foi **eliminar o chassi plano** e usar o corpo impresso como estrutura portante. Características da solução final:
+
+- Corpo impresso em 3D (PLA), conforme RFIS02 — **204,4 × 126,0 × 77,7 mm**;
+- Interior oco, alojando ESP32, ponte H, suporte de pilhas e fiação (RFIS03);
+- **Furação** feita pela equipe por operação booleana, abrindo passagem para os eixos dos motores, para os cabos e para a face do sensor (RFIS04);
+- **Travessa interna** modelada pela equipe, que alinha e sustenta os dois motores mantendo os eixos coaxiais;
+- Track frames laterais fixando o conjunto de esteiras (RFIS05);
+- **Roda boba traseira** modelada pela equipe, que fornece o terceiro ponto de apoio (RFIS05);
+- Corpo **seccionado em três partes** unidas por 7 pinos de encaixe, o que permite abri-lo para acessar a eletrônica sem desmontar esteiras, braços ou cabeça (RFIS06).
+
+O detalhamento completo da modelagem, das adaptações e dos parâmetros de impressão está em [`Modelo 3d/README.md`](<Modelo 3d/README.md>) e resumido na seção 23.
 
 ---
 
 ## 15. Descrição da Carenagem
 
-A carenagem constitui o elemento primariamente **estético** do projeto, responsável por reproduzir visualmente as características do personagem WALL-E. O chassi, descrito na seção anterior, permanece como a estrutura funcional responsável por suportar os componentes eletromecânicos.
+A carenagem é o elemento **estético** do projeto, responsável por reproduzir visualmente as características do personagem WALL-E.
 
-### 15.1 Materiais possíveis (a definir)
+### 15.1 Solução adotada: carenagem e chassi em peça única
 
-- Papel;
-- Papel cartão;
-- Papelão;
-- MDF;
-- Acrílico;
-- Plástico;
-- Peças impressas em 3D.
+A concepção inicial previa uma carenagem separada, montada sobre o chassi plano, com material a definir entre papel, papel cartão, papelão, MDF, acrílico, plástico ou impressão 3D.
 
-### 15.2 Características visuais a serem reproduzidas
+Com a mudança descrita na seção 14.2, **essa separação deixou de existir**. O corpo impresso do WALL-E exerce as duas funções ao mesmo tempo: é a estrutura que sustenta motores e eletrônica e é, simultaneamente, o revestimento estético do robô.
+
+Consequências da decisão:
+
+| Critério | Resultado |
+|---|---|
+| Adequação ao chassi | Perfeita por construção — carenagem e chassi são a mesma peça, não há folga nem desalinhamento |
+| Fixação | Não há: nada precisa ser fixado por cima, eliminando parafusos, fitas e colas aparentes |
+| Acabamento | Impressão em PLA a 0,2 mm, com cores separadas por filamento (amarelo, preto, prata, vermelho e cinza) — sem pintura manual |
+| Acesso aos componentes | Garantido pelo corte em três seções unidas por pinos de encaixe: o corpo abre para manutenção (RFIS06) |
+| Criatividade | O robô **é** o personagem, em vez de um chassi genérico com uma casca por cima |
+
+O material definitivo é, portanto, **PLA impresso em 3D**, com as esteiras em TPU 95A.
+
+### 15.2 Características visuais reproduzidas
 
 - Corpo de formato retangular;
 - Cabeça posicionada na parte superior do corpo;
@@ -265,11 +324,13 @@ A carenagem constitui o elemento primariamente **estético** do projeto, respons
 - Aparência geral de robô compacto;
 - Elementos visuais que remetam às esteiras laterais do personagem.
 
-O material definitivo, as dimensões finais e o método de fixação da carenagem sobre o chassi serão definidos em etapa posterior do projeto.
+Todos esses elementos estão presentes no modelo impresso, incluindo os braços articulados, a cabeça com os dois olhos característicos e as esteiras laterais funcionais — que, no caso deste projeto, não são apenas decorativas: são o próprio sistema de tração.
 
 ---
 
-## 16. Croqui do Chassi
+## 16. Croqui do Chassi (concepção)
+
+> 📌 **Registro da concepção.** As vistas abaixo foram desenhadas na etapa de concepção, quando o projeto previa um chassi plano de 220 × 140 × 35 mm com duas rodas motrizes. A geometria final do robô é outra — corpo do WALL-E de 204 × 126 × 78 mm com esteiras — e está documentada nos renders da **seção 23.3** e em [`Modelo 3d/renders/`](<Modelo 3d/renders/>). O croqui é mantido como registro da evolução do projeto.
 
 ### 16.0 Imagens do Croqui
 
@@ -348,40 +409,55 @@ O material definitivo, as dimensões finais e o método de fixação da carenage
 
 ## 17. Considerações de Montagem
 
-- A montagem eletrônica deve priorizar a organização da fiação entre o ESP32, o driver TB6612FNG e os motores, de modo a evitar interferências e facilitar a manutenção;
-- As pilhas devem ser fixadas em posição central e baixa, contribuindo para a estabilidade e o equilíbrio do robô durante a locomoção;
-- O sensor HC-SR04 deve ser instalado com visada livre na parte frontal, sem obstrução por elementos da carenagem;
-- A carenagem deve ser projetada de forma a permitir sua remoção ou abertura, garantindo acesso aos componentes internos para ajustes e manutenção, conforme RFIS06;
-- A fixação dos motores e das rodas deve considerar o alinhamento adequado para o correto funcionamento do controle diferencial de direção.
+- A fiação entre o ESP32, a ponte H e os motores corre por dentro do corpo, pelos furos abertos na modelagem, evitando cabos aparentes e facilitando o fechamento das seções;
+- O suporte de pilhas fica na região central e baixa do corpo, mantendo o centro de gravidade baixo e a estabilidade durante a locomoção;
+- O HC-SR04 é instalado com visada livre na face frontal, sem obstrução — o furo do sensor foi previsto na modelagem;
+- O corpo abre em três seções unidas por pinos de encaixe, garantindo acesso aos componentes internos para ajustes e manutenção (RFIS06);
+- O alinhamento dos dois eixos de motor é garantido pela travessa interna modelada pela equipe; o desbalanceamento residual entre os motores é corrigido por software, pela página de calibração descrita na seção 24.5;
+- As esteiras devem ser montadas alinhando as ranhuras internas aos dentes da roda dentada — se o encaixe não for exato, a esteira patina ou salta sob carga.
 
 ---
 
 ## 18. Considerações para a Entrega Final
 
-Para a conclusão do projeto, as seguintes etapas ainda deverão ser realizadas:
+Situação de cada etapa prevista para a conclusão do projeto:
 
-- Definição final dos parâmetros técnicos atualmente pendentes (pilhas, motores, rodas, controle remoto, distância de detecção, entre outros);
-- Modelagem tridimensional definitiva do chassi, com posterior impressão 3D;
-- Confecção da carenagem, com definição do material a ser utilizado;
-- Montagem elétrica completa dos componentes sobre o chassi;
-- Desenvolvimento e testes do firmware do ESP32, contemplando o controle dos motores, a comunicação sem fio e a leitura do sensor de distância;
-- Testes funcionais de locomoção, comunicação remota e detecção de obstáculos;
-- Validação da integração entre o chassi funcional e a carenagem estética.
+| Etapa | Status | Onde está documentada |
+|---|---|---|
+| Definição dos parâmetros técnicos pendentes | ✅ Concluída | Seção 8.2 |
+| Modelagem 3D definitiva e impressão | ✅ Concluída | Seção 23 e [`Modelo 3d/`](<Modelo 3d/README.md>) |
+| Confecção da carenagem | ✅ Concluída — integrada ao corpo impresso | Seção 15.1 |
+| Montagem elétrica completa | ✅ Concluída | Seção 24 |
+| Firmware do ESP32 (motores, sem fio e sensor) | ✅ Concluído | Seção 24 e [`Códigos/`](<Códigos/README.md>) |
+| Testes funcionais | ✅ Concluídos | Seções 21 e 25 |
+| Integração chassi + carenagem | ✅ Resolvida por unificação em peça única | Seção 14.2 |
 
 ---
 
 ## 19. Possíveis Melhorias Futuras
 
-- Implementação de controle de velocidade variável por meio de sinais PWM;
-- Adição de sensores complementares, como sensores de linha ou de proximidade adicionais, para ampliar a percepção do ambiente;
-- Utilização de aplicativo dedicado para controle via Wi-Fi, em substituição ou complemento ao controle remoto físico;
-- Adição de sistema de iluminação (LEDs) para reforçar a caracterização visual do personagem WALL-E;
-- Estudo de substituição das pilhas por bateria recarregável, caso a autonomia obtida se mostre insuficiente;
-- Otimização estrutural do chassi visando redução de peso, mantendo a resistência mecânica necessária.
+Três itens previstos como melhoria futura na concepção **já foram implementados** durante a execução:
+
+| Item previsto | Situação |
+|---|---|
+| Controle de velocidade variável por PWM | ✅ Implementado — PWM de 1 kHz/8 bits, com velocidade máxima ajustável em tempo real pelos gatilhos R2/L2 |
+| Aplicativo/interface via Wi-Fi | ✅ Implementado — página web servida pelo próprio ESP32 para calibração dos motores |
+| Atualização de firmware sem cabo | ✅ Implementado — OTA pela rede Wi-Fi (não estava previsto originalmente) |
+
+Permanecem como melhorias futuras:
+
+- Adição de sensores complementares (linha, proximidade lateral) para ampliar a percepção do ambiente;
+- Sistema de iluminação (LEDs) nos olhos, reforçando a caracterização visual do personagem;
+- Substituição das pilhas por bateria recarregável, ganhando autonomia e corrente de pico;
+- Motorização dos braços e da cabeça, que hoje são articulados mas apenas posicionáveis à mão;
+- Telemetria na página web (distância, velocidade e tensão da bateria em tempo real);
+- Medição instrumentada de peso, autonomia e corrente de operação (ver seção 25.4).
 
 ---
 
 ## 20. Aula 15 — Arquitetura Eletrônica: Diagrama de Blocos e Alimentação
+
+> 🕐 **Registro histórico.** Esta seção e a seção 21 documentam a etapa de **validação em bancada**, feita com Arduino Uno e módulo Bluetooth HC-05, antes da migração para o ESP32. Elas não descrevem o robô entregue — a eletrônica final está na **seção 24**. São mantidas porque registram a evolução do projeto e os testes que fundamentaram as decisões seguintes.
 
 Nesta etapa o grupo realizou a **montagem física de bancada** dos componentes eletrônicos, com o objetivo de validar o diagrama de blocos, o diagrama de alimentação e a pinagem antes da integração definitiva no chassi.
 
@@ -454,7 +530,7 @@ O grupo testou o controle remoto do carrinho via **módulo Bluetooth (HC-05)**, 
 
 🎥 Vídeo do teste: [Controle Bluetooth.mp4](<vídeo/Controle Bluetooth.mp4>) *(o link abre o player de vídeo do próprio GitHub — veja a observação sobre reprodução do vídeo na seção 21.3)*
 
-**Código utilizado no teste** (arquivo [`Motor + Bluetooth.ino`](<Motor + Bluetooth.ino>), também disponível no repositório, testado em Arduino Uno + L298N + HC-SR04 + HC-05):
+**Código utilizado no teste** (arquivo [`Códigos/testes-aula16/Motor + Bluetooth.ino`](<Códigos/testes-aula16/Motor + Bluetooth.ino>), testado em Arduino Uno + L298N + HC-SR04 + HC-05):
 
 ```cpp
 /*
@@ -630,7 +706,7 @@ O grupo também testou a integração entre os motores e o **sensor ultrassônic
 
 No vídeo é possível observar os motores parando assim que o carrinho se aproxima do objeto.
 
-**Código utilizado no teste** (arquivo [`Motor + Sensor de Aproximacao.ino`](<Motor + Sensor de Aproximacao.ino>), também disponível no repositório, testado em Arduino Uno + L298N + pilhas AA):
+**Código utilizado no teste** (arquivo [`Códigos/testes-aula16/Motor + Sensor de Aproximacao.ino`](<Códigos/testes-aula16/Motor + Sensor de Aproximacao.ino>), testado em Arduino Uno + L298N + pilhas AA):
 
 ```cpp
 /*
@@ -770,11 +846,13 @@ float lerDistanciaCM() {
 ### 21.3 Como assistir aos vídeos e onde está o código
 
 - **Vídeo:** o GitHub não reproduz vídeo diretamente dentro da página do `Documentacao.md` (markdown não dá suporte a player embutido/autoplay por segurança). Ao clicar em um dos links de vídeo acima, o GitHub abre a página do arquivo (`.mp4`) dentro do repositório, e nessa página o **próprio GitHub exibe um player nativo com botão de play** — não é necessário baixar o arquivo, só clicar em play na página que abrir.
-- **Código:** os arquivos `.ino` usados nos testes (`Motor + Bluetooth.ino` e `Motor + Sensor de Aproximacao.ino`) estão versionados na raiz deste repositório, além de estarem reproduzidos nesta documentação (seções 21.1 e 21.2).
+- **Código:** os arquivos `.ino` usados nesses testes estão versionados em [`Códigos/testes-aula16/`](<Códigos/testes-aula16>), além de reproduzidos nesta documentação (seções 21.1 e 21.2). O firmware **definitivo**, que roda no robô entregue, é outro: [`Códigos/PS5_ESP32_Bluepad32.ino`](<Códigos/PS5_ESP32_Bluepad32.ino>), descrito na seção 24.
 
 ### 21.4 Observação sobre a placa utilizada nos testes
 
-Assim como na Aula 15, os testes de programação desta etapa (Bluetooth e sensor) foram realizados em **Arduino Uno**, por ser a placa disponível para os testes rápidos de bancada. A lógica validada (módulos de movimento, leitura do sensor, parada por proximidade e controle remoto) será portada para o **ESP32**, placa controladora definitiva do projeto.
+Assim como na Aula 15, os testes de programação desta etapa (Bluetooth e sensor) foram realizados em **Arduino Uno**, por ser a placa disponível para os testes rápidos de bancada.
+
+✅ **A migração foi concluída.** A lógica validada aqui — movimento diferencial, leitura do HC-SR04, parada por proximidade e recepção de comandos sem fio — foi portada para o **ESP32**, e ampliada com PWM por rampa, controle por gamepad PS5, calibração via web e atualização OTA. O resultado está documentado na seção 24 e a comparação entre as duas versões, na seção 26.
 
 ---
 
@@ -794,7 +872,292 @@ Esta documentação técnica cobre a concepção física e funcional do robô. O
 
 ---
 
-**Documento:** Documentação Técnica — PT1 - CP1
+## 23. Projeto Mecânico e Fabricação (versão final)
+
+### 23.1 Do chassi plano ao corpo estrutural
+
+A concepção previa duas peças: um chassi plano de 220 × 140 × 35 mm e uma carenagem por cima. Durante a modelagem ficou claro que o corpo do WALL-E — retangular, oco e com esteiras nas laterais — **já era um chassi**. Manter a placa embaixo dele duplicaria estrutura, adicionaria peso e subiria o centro de gravidade sem nenhum ganho.
+
+A equipe partiu do modelo articulado **"WALL-E Robot - Articulated"**, de RoboDIYer (MakerWorld), e o converteu de figura decorativa em robô motorizado. No modelo original as esteiras giram livres, empurradas com a mão; não há previsão de motor, eletrônica ou alimentação.
+
+### 23.2 Peças desenvolvidas pela equipe
+
+| Peça | Dimensões | Função |
+|---|---|---|
+| `corpo-wall-e-furado.stl` | 204,4 × 126,0 × 77,7 mm | Corpo perfurado por operação booleana, abrindo passagem para os eixos dos motores, para a fiação e para a face do sensor |
+| `extensor-de-eixo.stl` (×2) | 7,6 × 24,0 × 6,4 mm | **Peça-chave**: acopla o eixo do motor DC, que fica dentro do corpo, à roda dentada da esteira, que fica fora do track frame |
+| `roda-boba-caster.stl` | 86,0 × 36,0 × 15,0 mm | Roda boba traseira — terceiro ponto de apoio, impede o robô de cabecear (RFIS05) |
+| `travessa-interna.stl` | 98,0 × 25,0 × 14,0 mm | Sustenta e alinha os dois motores dentro do corpo, mantendo os eixos coaxiais |
+
+Os STL estão em [`Modelo 3d/stl/`](<Modelo 3d/stl>) e o projeto completo do slicer, em [`Modelo 3d/Wall-E_Articulated(3).3mf`](<Modelo 3d/Wall-E_Articulated(3).3mf>).
+
+### 23.3 Corte para impressão e acesso interno
+
+O corpo montado tem 204 × 126 × 78 mm e não cabia em uma chapa com orientação adequada. Ele foi **seccionado em três partes** (`Body_B_B`, `Body_B_B_A`, `Body_B_B_B_B`) unidas por **7 pinos de encaixe** (`Conector-1` a `Conector-7`).
+
+O corte trouxe um ganho não previsto: o corpo passou a **abrir**, dando acesso ao ESP32, à ponte H e às pilhas sem desmontar esteiras, braços ou cabeça. Isso atende diretamente ao RFIS06.
+
+Os renders das 16 chapas de impressão estão em [`Modelo 3d/renders/`](<Modelo 3d/renders>):
+
+| | | | |
+|---|---|---|---|
+| ![Chapa 1](<Modelo 3d/renders/chapa-01.png>) | ![Chapa 2](<Modelo 3d/renders/chapa-02.png>) | ![Chapa 3](<Modelo 3d/renders/chapa-03.png>) | ![Chapa 4](<Modelo 3d/renders/chapa-04.png>) |
+| ![Chapa 5](<Modelo 3d/renders/chapa-05.png>) | ![Chapa 6](<Modelo 3d/renders/chapa-06.png>) | ![Chapa 7](<Modelo 3d/renders/chapa-07.png>) | ![Chapa 8](<Modelo 3d/renders/chapa-08.png>) |
+
+### 23.4 Distribuição real dos componentes
+
+```
+                         FRENTE
+                           ↓
+        ┌────────────────────────────────────┐
+        │            HC-SR04                 │  ← face frontal, visada livre
+        │  ┌──────────────────────────────┐  │
+   ║║   │  │  ESP32          PONTE H      │  │   ║║
+   ║║   │  │                              │  │   ║║   ← esteiras TPU
+   ║║   │  │  MOTOR ESQ      MOTOR DIR    │  │   ║║      nos track frames
+   ║║   │  │    (travessa interna)        │  │   ║║
+        │  │  SUPORTE 4x PILHAS AA        │  │
+        │  └──────────────────────────────┘  │
+        └────────────────────────────────────┘
+                     (△) RODA BOBA
+                          TRÁS
+
+        ├─────────── 204,4 mm ───────────┤      altura: 77,7 mm
+```
+
+- **HC-SR04**: face frontal do corpo, com furo próprio previsto na modelagem;
+- **ESP32 e ponte H**: região superior interna, acessíveis ao abrir a seção superior;
+- **Motores**: região central-baixa, presos pela travessa interna, com os eixos saindo pelas laterais através dos furos;
+- **Pilhas**: região central-baixa, mantendo o centro de gravidade baixo;
+- **Roda boba**: traseira, apoiada no piso.
+
+### 23.5 Parâmetros de impressão
+
+Bambu Lab A1, bico 0,4 mm, perfil 0.20 mm Standard, 2 paredes, 15% de preenchimento, suporte em árvore, 16 chapas. Filamentos: 5 × PLA (amarelo, preto, prata, vermelho, cinza) + **1 × TPU 95A**.
+
+> ⚠️ As esteiras **precisam** ser impressas em TPU 95A. Em PLA elas quebram e não acompanham a roda dentada.
+
+### 23.6 Versões do modelo
+
+| Versão | O que mudou |
+|---|---|
+| v1 | Modelo base importado, sem alterações |
+| v2 | `Wall-E_Articulated(2).3mf` — corte do corpo e primeiros furos |
+| v3 | `Wall-E_Articulated(3).3mf` — **atual**: furação final, extensor de eixo, roda boba, travessa interna e reorganização das 16 chapas |
+
+O encadeamento está registrado dentro do próprio arquivo: cada peça carrega o metadado `source_file` apontando para a versão anterior.
+
+---
+
+## 24. Hardware, Eletrônica e Firmware (versão final)
+
+### 24.1 Visão geral
+
+O robô entregue roda o firmware [`Códigos/PS5_ESP32_Bluepad32.ino`](<Códigos/PS5_ESP32_Bluepad32.ino>) em um **ESP32 Dev Module**. Ele recebe comandos de um **controle PS5 DualSense** por Bluetooth clássico, aciona dois motores DC através de uma **ponte H dupla** e usa um **HC-SR04** como trava de segurança contra colisão frontal.
+
+### 24.2 Pinagem (ESP32 — versão final)
+
+| Componente | Sinal | GPIO | Observação |
+|---|---|---|---|
+| Ponte H | IN1 — Motor A (esquerdo) | **26** | PWM, canal LEDC 0 |
+| Ponte H | IN2 — Motor A (esquerdo) | **27** | PWM, canal LEDC 1 |
+| Ponte H | IN3 — Motor B (direito) | **32** | PWM, canal LEDC 2 |
+| Ponte H | IN4 — Motor B (direito) | **33** | PWM, canal LEDC 3 |
+| HC-SR04 | TRIG | **4** | Saída |
+| HC-SR04 | ECHO | **18** | Entrada |
+
+Todos os quatro sinais da ponte H são gerados por PWM de **1 kHz com resolução de 8 bits**, através do periférico LEDC do ESP32 (canais 0 a 3).
+
+> ⚠️ **O HC-SR04 é alimentado em 3,3 V**, e não em 5 V. Essa decisão elimina a necessidade de divisor resistivo no pino ECHO: alimentado em 5 V, o sensor devolveria 5 V no ECHO e danificaria o GPIO do ESP32, que é tolerante apenas a 3,3 V. A 3,3 V o sensor funciona com alcance ligeiramente menor, suficiente para os 20 cm de detecção usados no projeto.
+
+> **Polaridade do Motor B.** Os dois motores ficam montados espelhados no corpo, o que faz um deles girar ao contrário do outro para o mesmo sinal. Em vez de reinverter os fios, a correção foi feita **em software**: a função `aplicaMotorB()` inverte a ordem dos canais PWM. Trocar os fios do motor B na ponte H quebra esse pareamento.
+
+### 24.3 Alimentação
+
+```
+4x PILHAS AA (suporte com chave)
+   │
+   ▼
+PONTE H ──► MOTOR ESQUERDO
+   │    └─► MOTOR DIREITO
+   │
+   ▼
+ESP32 ──► HC-SR04 (3,3 V)
+```
+
+O conjunto de 4 pilhas AA alimenta a ponte H, que fornece a tensão regulada ao ESP32; o ESP32, por sua vez, alimenta o sensor em 3,3 V. A chave do suporte de pilhas é o liga/desliga geral do robô.
+
+### 24.4 Funcionamento do firmware
+
+O `loop()` executa cinco tarefas a cada ciclo, sem nenhuma chamada bloqueante longa:
+
+**1. Leitura do controle.** `BP32.update()` busca o estado do DualSense. Os eixos vêm na faixa de −511 a 512. O eixo Y do stick esquerdo tem o sinal invertido (empurrar para cima devolve valor negativo) e vira o comando de **avanço**; o eixo X do stick direito vira o comando de **giro**.
+
+**2. Zona morta.** Valores abaixo de 80 unidades (~15% do curso) são zerados. Sem isso, o desgaste natural do analógico faria o robô andar sozinho parado.
+
+**3. Mistura diferencial.** Os dois comandos viram potência de cada motor:
+
+```cpp
+int a = fr + gr;   // motor A (esquerdo)
+int b = fr - gr;   // motor B (direito)
+```
+
+Só avanço → os dois motores giram juntos. Só giro → giram em sentidos opostos, e o robô roda sobre o próprio eixo. Combinados → curva aberta.
+
+**4. Freio de segurança.** O sensor é lido a cada 60 ms, com timeout de 15 ms no `pulseIn` (~2,5 m de alcance) para nunca travar o loop esperando um eco que não vem. Se houver obstáculo a menos de 20 cm:
+
+```cpp
+bool objetoPerto = (distanciaCm >= 0 && distanciaCm < DISTANCIA_MIN_CM);
+if (objetoPerto && fr > 0) fr = 0;   // corta SÓ o avanço
+```
+
+A ré e o giro continuam liberados — o robô nunca fica preso contra a parede.
+
+**5. Rampa de aceleração.** Os valores calculados não vão direto ao motor: eles são a *meta*. A cada 15 ms, a potência atual se aproxima da meta em 12 unidades. Isso suaviza o arranque, evita o tranco que faz a esteira saltar do dente e reduz o pico de corrente sobre as pilhas.
+
+**Ajuste de velocidade em tempo real.** Os gatilhos analógicos alteram o teto de velocidade sem recompilar: **R2** aumenta e **L2** reduz `velMax`, dentro dos limites de 80 a 255 (valor inicial: 200).
+
+### 24.5 Calibração dos motores pela web
+
+Dois motores DC nunca giram exatamente na mesma rotação sob a mesma tensão — o robô puxa para um lado ao tentar andar reto. Em vez de compensar isso com valores fixos no código, o firmware sobe um **servidor web** no próprio ESP32.
+
+Acessando `http://<ip-do-esp32>/` pelo celular, na mesma rede Wi-Fi, aparecem dois sliders (30% a 100%) que aplicam um fator de correção a cada motor, e o valor atual do sensor de distância. Os valores são salvos na **memória não-volátil (NVS)** via `Preferences` e sobrevivem ao desligamento.
+
+Endpoints: `/` (página), `/get` (estado em JSON), `/set?a=&b=` (grava os fatores).
+
+### 24.6 Atualização OTA
+
+Depois da primeira gravação por cabo, novas versões do firmware são enviadas pela rede Wi-Fi: o robô aparece no Arduino IDE em `Tools > Port` como `carrinho-esp32`. Isso evita abrir o corpo impresso a cada ajuste de código — o que, com o corpo fechado por pinos de encaixe e as esteiras montadas, economizou bastante tempo.
+
+> Requer **Partition Scheme com OTA** selecionado no Arduino IDE. Qualquer opção com "No OTA" no nome faz a atualização pela rede falhar.
+
+### 24.7 Credenciais de rede
+
+O SSID e a senha do Wi-Fi ficam em `Códigos/secrets.h`, que **não é versionado** (está no `.gitignore`). O repositório traz [`Códigos/secrets.h.example`](<Códigos/secrets.h.example>) como modelo: basta copiá-lo para `secrets.h` e preencher.
+
+---
+
+## 25. Testes, Problemas e Correções
+
+### 25.1 Testes realizados
+
+| # | Teste | Resultado | Evidência |
+|---|---|---|---|
+| T1 | Acionamento individual de cada motor (bancada) | ✅ Passou | Seção 20.3 |
+| T2 | Movimento para frente, ré e curvas (bancada) | ✅ Passou | Seção 21 |
+| T3 | Leitura do HC-SR04 e parada automática (bancada) | ✅ Passou | Seção 21.2 + vídeo |
+| T4 | Controle remoto sem fio, via HC-05 e app (bancada) | ✅ Passou | Seção 21.1 + vídeo |
+| T5 | Pareamento do DualSense com o ESP32 via Bluepad32 | ✅ Passou | Seção 25.2 |
+| T6 | Controle diferencial com os dois sticks | ✅ Passou | — |
+| T7 | Freio de segurança a 20 cm, com ré e giro liberados | ✅ Passou | — |
+| T8 | Calibração dos motores pela página web | ✅ Passou | Seção 24.5 |
+| T9 | Atualização de firmware por OTA | ✅ Passou | Seção 24.6 |
+| T10 | Tração das esteiras com o corpo montado e fechado | ✅ Passou | — |
+
+### 25.2 Problemas encontrados e correções
+
+| # | Problema | Causa | Correção adotada |
+|---|---|---|---|
+| P1 | App "BLE Controller" não conectava no módulo HC-05 | HC-05 usa Bluetooth **clássico** (SPP), não BLE | Troca para o app "Arduino Bluetooth Controller", compatível com SPP |
+| P2 | Um motor girava ao contrário do outro com o mesmo comando | Motores montados espelhados no corpo | Inversão da ordem dos canais PWM na função `aplicaMotorB()`, em vez de reinverter os fios |
+| P3 | Robô não andava reto — puxava sempre para o mesmo lado | Diferença de rotação natural entre dois motores DC | Fatores de correção por motor, ajustáveis pela página web e salvos em NVS (seção 24.5) |
+| P4 | Robô se movia sozinho com os sticks em repouso | Ruído/desgaste do potenciômetro do analógico | Zona morta de 80 unidades (~15%) aplicada aos dois eixos |
+| P5 | Tranco no arranque, com a esteira saltando o dente da roda | Aplicação de PWM máximo instantaneamente | Rampa de aceleração: 12 unidades a cada 15 ms |
+| P6 | Loop travava por instantes quando não havia obstáculo à frente | `pulseIn` esperava o eco até o timeout padrão | Timeout reduzido para 15 ms (~2,5 m) e leitura limitada a 1 a cada 60 ms |
+| P7 | Risco de dano ao GPIO do ESP32 pelo pino ECHO | HC-SR04 em 5 V devolve 5 V no ECHO; o ESP32 tolera 3,3 V | Sensor alimentado em 3,3 V, dispensando divisor resistivo |
+| P8 | Robô cabeceava para a frente ao frear | Apoio apenas nas duas esteiras | Modelagem da roda boba traseira |
+| P9 | Corpo montado não cabia na mesa de impressão | 204 × 126 × 78 mm | Corte em três seções com 7 pinos de encaixe — que ainda resolveu o acesso interno |
+| P10 | Esteiras quebravam ao serem montadas | Impressas em PLA, material rígido | Reimpressão em TPU 95A |
+| P11 | Reabrir o corpo a cada ajuste de firmware era inviável | Corpo fechado por encaixe, com esteiras montadas | Implementação de atualização OTA via Wi-Fi |
+| P12 | Controle não reconectava, tentando parear com dispositivo antigo | Chaves de pareamento antigas guardadas no ESP32 | `BP32.forgetBluetoothKeys()` — deixada comentada no código, para uso pontual |
+
+### 25.3 Resultado final
+
+O robô cumpre todos os requisitos funcionais definidos:
+
+| Requisito | Situação |
+|---|---|
+| RF01 — movimentar-se para frente | ✅ |
+| RF02 — movimentar-se para trás | ✅ |
+| RF03 — curvas por controle diferencial | ✅ Inclui giro sobre o próprio eixo |
+| RF04 — comandos por controle remoto sem fio | ✅ PS5 DualSense via Bluetooth |
+| RF05 — detectar obstáculos | ✅ HC-SR04, leitura a cada 60 ms |
+| RF06 — interromper/modificar o movimento ao detectar obstáculo | ✅ Bloqueio de avanço a 20 cm, com ré e giro liberados |
+
+### 25.4 Limitações conhecidas
+
+- **Peso, autonomia e corrente de operação não foram medidos** por falta de instrumentação — permanecem como parâmetros não caracterizados;
+- O alcance do sensor é reduzido por operar em 3,3 V, o que é irrelevante para a distância de 20 cm utilizada;
+- Os braços, a cabeça e a tampa frontal são articulados, mas **posicionáveis apenas à mão** — não são motorizados;
+- A página de calibração e o OTA dependem da rede Wi-Fi configurada em `secrets.h`; fora dela, o robô continua pilotável, mas sem esses dois recursos.
+
+---
+
+## 26. Evolução do Projeto e Decisões
+
+| # | Decisão | Motivo |
+|---|---|---|
+| D1 | Arduino Uno **apenas** para bancada; ESP32 na versão final | O Uno não tem rádio integrado. O ESP32 traz Wi-Fi e Bluetooth no próprio chip, permitindo controle sem fio, OTA e página web sem hardware adicional |
+| D2 | Abandono do módulo HC-05 | Com o ESP32, o Bluetooth passou a ser nativo — o módulo externo virou peça redundante ocupando espaço e pinos |
+| D3 | Controle PS5 DualSense no lugar do app de celular | Sticks analógicos dão controle proporcional de velocidade e curva, impossível com os botões F/B/L/R do app. Também libera o celular para a página de calibração |
+| D4 | Uso da biblioteca Bluepad32 | Mais estável que as alternativas baseadas em *spoof* de endereço MAC, e com suporte oficial ao DualSense |
+| D5 | Eliminação do chassi plano | O corpo do WALL-E já era estrutura. Manter os dois duplicaria peso e subiria o centro de gravidade |
+| D6 | Esteiras no lugar de rodas motrizes | Fidelidade ao personagem e maior área de contato com o piso |
+| D7 | Correção de polaridade por software | Evita depender da ordem correta dos fios na montagem, que é fácil de errar ao fechar o corpo |
+| D8 | Calibração por página web em vez de constante no código | Permite ajustar o robô no local da apresentação, sem notebook, cabo ou recompilação |
+| D9 | Freio que bloqueia só o avanço | Uma parada total prenderia o robô contra o obstáculo, exigindo intervenção manual |
+| D10 | `secrets.h` fora do versionamento | Impede que a senha do Wi-Fi vá para o repositório público |
+
+---
+
+## 27. Instruções de Uso
+
+### 27.1 Ligar e pilotar
+
+1. Ligue a chave do suporte de pilhas.
+2. Coloque o DualSense em modo pareamento: segure **PS + Create** até o LED piscar rápido.
+3. Aguarde o pareamento (alguns segundos). O robô já está pronto.
+4. **Stick esquerdo (frente/trás)** — avanço e ré. **Stick direito (esquerda/direita)** — giro.
+5. **R2** aumenta a velocidade máxima; **L2** reduz.
+6. Ao aproximar-se de um obstáculo a menos de 20 cm, o avanço é bloqueado automaticamente. Use a ré ou o giro para sair.
+
+### 27.2 Calibrar os motores
+
+1. Conecte o celular à mesma rede Wi-Fi configurada em `secrets.h`.
+2. Abra `http://<ip-do-esp32>/` — o IP é exibido no Serial Monitor (115200 baud) ao ligar.
+3. Ande para a frente com o controle e reduza o slider do motor mais forte até o robô andar reto.
+4. Os valores são salvos sozinhos e sobrevivem ao desligamento.
+
+### 27.3 Gravar o firmware
+
+1. Instale o pacote de placas **Bluepad32** no Arduino IDE.
+2. Selecione `ESP32 Bluepad32 Arduino > ESP32 Dev Module`.
+3. Em `Tools > Partition Scheme`, escolha uma opção **com OTA**.
+4. Copie `Códigos/secrets.h.example` para `Códigos/secrets.h` e preencha o SSID e a senha da rede.
+5. Grave por cabo USB na primeira vez. Depois disso, use OTA (`Tools > Port > carrinho-esp32`).
+
+### 27.4 Se o controle não conectar
+
+Descomente a linha `BP32.forgetBluetoothKeys();` no `setup()`, grave, ligue uma vez, e comente novamente. Isso apaga pareamentos antigos guardados no ESP32.
+
+---
+
+## 28. Evidências Finais
+
+| Evidência | Arquivo |
+|---|---|
+| Montagem eletrônica de bancada | [`imagens/Diagrama de Blocos e bateria.png`](<imagens/Diagrama de Blocos e bateria.png>), [`imagens/Diagramas (visão de cima).png`](<imagens/Diagramas (visão de cima).png>), [`imagens/Cabos no Arduino.png`](<imagens/Cabos no Arduino.png>) |
+| Controle sem fio (teste de bancada) | [`imagens/Controle Bluetooth.jpeg`](<imagens/Controle Bluetooth.jpeg>) e [`vídeo/Controle Bluetooth.mp4`](<vídeo/Controle Bluetooth.mp4>) |
+| Sensor de aproximação (teste de bancada) | [`vídeo/Motor + Sensor de Aproximação.mp4`](<vídeo/Motor + Sensor de Aproximação.mp4>) |
+| Renders das chapas de impressão | [`Modelo 3d/renders/`](<Modelo 3d/renders>) |
+| Modelo 3D e STL das peças próprias | [`Modelo 3d/`](<Modelo 3d/README.md>) |
+| Firmware final | [`Códigos/PS5_ESP32_Bluepad32.ino`](<Códigos/PS5_ESP32_Bluepad32.ino>) |
+
+> 📋 **Pendências de evidência.** Faltam registrar: fotos do robô finalizado, fotos da impressão 3D e das peças recém-impressas, fotos da montagem elétrica dentro do corpo, vídeo de funcionamento geral, vídeo do controle PS5 e vídeo do freio de segurança atuando. Os dois arquivos em `vídeo/` são atualmente **o mesmo vídeo duplicado** — o segundo teste precisa ser reenviado.
+
+---
+
+**Documento:** Documentação Técnica — CP1
 **Projeto:** Carrinho Robótico WALL-E
 **Turma:** 4ESPY
-**Última alteração em:** 19/08/2026
+**Última alteração em:** 16/09/2026
