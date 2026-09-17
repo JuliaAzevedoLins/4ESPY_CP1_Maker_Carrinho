@@ -411,7 +411,7 @@ Todos esses elementos estão presentes no robô montado, incluindo os braços ar
 - O suporte de pilhas fica na região central e baixa do corpo, mantendo o centro de gravidade baixo e a estabilidade durante a locomoção;
 - O HC-SR04 é instalado com visada livre na face frontal, sem obstrução — o furo do sensor foi previsto na modelagem;
 - O corpo abre em três seções unidas por pinos de encaixe, garantindo acesso aos componentes internos para ajustes e manutenção (RFIS06);
-- O alinhamento dos dois eixos de motor é garantido pela travessa interna modelada pela equipe; o desbalanceamento residual entre os motores é corrigido por software, pela página de calibração descrita na seção 24.5;
+- O alinhamento dos dois eixos de motor é garantido pela travessa interna modelada pela equipe; o desbalanceamento residual entre os motores é corrigido por software, pela página de calibração descrita na seção 24.6;
 - As rodas motrizes são fixadas ao eixo do motor pelo extensor impresso: o encaixe precisa estar firme, sob pena de a roda girar em falso sobre o eixo.
 
 ---
@@ -985,7 +985,56 @@ Todos os quatro sinais da ponte H são gerados por PWM de **1 kHz com resoluçã
 
 > **Polaridade do Motor B.** Os dois motores ficam montados espelhados no corpo, o que faz um deles girar ao contrário do outro para o mesmo sinal. Em vez de reinverter os fios, a correção foi feita **em software**: a função `aplicaMotorB()` inverte a ordem dos canais PWM. Trocar os fios do motor B na ponte H quebra esse pareamento.
 
-### 24.3 Alimentação
+### 24.3 Diagrama de conexões
+
+```mermaid
+flowchart LR
+    BAT["BATERIA<br>com chave liga/desliga"]
+    ESP["ESP32 Dev Module"]
+    PH["PONTE H - L298N<br>jumpers ENA/ENB fechados"]
+    ME["MOTOR ESQUERDO (A)"]
+    MD["MOTOR DIREITO (B)"]
+    SENSOR["HC-SR04"]
+
+    BAT -- "+ e - para +12V e GND" --> PH
+    PH -- "+5V para VIN" --> ESP
+
+    ESP -- "GPIO26 para IN1" --> PH
+    ESP -- "GPIO27 para IN2" --> PH
+    ESP -- "GPIO32 para IN3" --> PH
+    ESP -- "GPIO33 para IN4" --> PH
+
+    PH -- "OUT1 e OUT2" --> ME
+    PH -- "OUT3 e OUT4" --> MD
+
+    ESP -- "GPIO4 para TRIG" --> SENSOR
+    SENSOR -- "ECHO para GPIO18" --> ESP
+    ESP -- "3V3 para VCC" --> SENSOR
+    ESP -- "GND para GND" --> SENSOR
+```
+
+**Resumo das ligações:**
+
+| De | Para | Função |
+|---|---|---|
+| ESP32 GPIO26 | L298N IN1 | Sentido/velocidade do motor A |
+| ESP32 GPIO27 | L298N IN2 | Sentido/velocidade do motor A |
+| ESP32 GPIO32 | L298N IN3 | Sentido/velocidade do motor B |
+| ESP32 GPIO33 | L298N IN4 | Sentido/velocidade do motor B |
+| ESP32 GPIO4 | HC-SR04 TRIG | Disparo do pulso ultrassônico |
+| ESP32 GPIO18 | HC-SR04 ECHO | Retorno do eco |
+| ESP32 3V3 | HC-SR04 VCC | Alimentação do sensor (**não usar 5 V**) |
+| ESP32 GND | HC-SR04 GND / L298N GND | Terra comum a todos os módulos |
+| L298N OUT1/OUT2 | Motor esquerdo | Saída de potência |
+| L298N OUT3/OUT4 | Motor direito | Saída de potência |
+| Bateria (+/−) | L298N +12V / GND | Entrada de potência |
+| L298N +5V | ESP32 VIN | Alimentação lógica do ESP32 pelo regulador da ponte H |
+
+> ⚠️ **Os jumpers ENA e ENB do L298N ficam fechados.** O controle de velocidade é feito por PWM nas próprias entradas `IN1`–`IN4`, e não por pinos de *enable* separados. Se os jumpers forem removidos, os motores não giram.
+
+> ⚠️ **O terra precisa ser comum** entre ESP32, ponte H e sensor. Sem isso, as leituras do HC-SR04 ficam erráticas e os motores respondem de forma imprevisível.
+
+### 24.4 Alimentação
 
 ```
 4x PILHAS AA (suporte com chave)
@@ -1000,7 +1049,7 @@ ESP32 ──► HC-SR04 (3,3 V)
 
 O conjunto de 4 pilhas AA alimenta a ponte H, que fornece a tensão regulada ao ESP32; o ESP32, por sua vez, alimenta o sensor em 3,3 V. A chave do suporte de pilhas é o liga/desliga geral do robô.
 
-### 24.4 Funcionamento do firmware
+### 24.5 Funcionamento do firmware
 
 O `loop()` executa cinco tarefas a cada ciclo, sem nenhuma chamada bloqueante longa:
 
@@ -1030,7 +1079,7 @@ A ré e o giro continuam liberados — o robô nunca fica preso contra a parede.
 
 **Ajuste de velocidade em tempo real.** Os gatilhos analógicos alteram o teto de velocidade sem recompilar: **R2** aumenta e **L2** reduz `velMax`, dentro dos limites de 80 a 255 (valor inicial: 200).
 
-### 24.5 Calibração dos motores pela web
+### 24.6 Calibração dos motores pela web
 
 Dois motores DC nunca giram exatamente na mesma rotação sob a mesma tensão — o robô puxa para um lado ao tentar andar reto. Em vez de compensar isso com valores fixos no código, o firmware sobe um **servidor web** no próprio ESP32.
 
@@ -1038,13 +1087,13 @@ Acessando `http://<ip-do-esp32>/` pelo celular, na mesma rede Wi-Fi, aparecem do
 
 Endpoints: `/` (página), `/get` (estado em JSON), `/set?a=&b=` (grava os fatores).
 
-### 24.6 Atualização OTA
+### 24.7 Atualização OTA
 
 Depois da primeira gravação por cabo, novas versões do firmware são enviadas pela rede Wi-Fi: o robô aparece no Arduino IDE em `Tools > Port` como `carrinho-esp32`. Isso evita abrir o corpo impresso a cada ajuste de código — o que, com o corpo fechado por pinos de encaixe e todo o conjunto montado, economizou bastante tempo.
 
 > Requer **Partition Scheme com OTA** selecionado no Arduino IDE. Qualquer opção com "No OTA" no nome faz a atualização pela rede falhar.
 
-### 24.7 Credenciais de rede
+### 24.8 Credenciais de rede
 
 O SSID e a senha do Wi-Fi ficam em `Códigos/secrets.h`, que **não é versionado** (está no `.gitignore`). O repositório traz [`Códigos/secrets.h.example`](<Códigos/secrets.h.example>) como modelo: basta copiá-lo para `secrets.h` e preencher.
 
@@ -1063,8 +1112,8 @@ O SSID e a senha do Wi-Fi ficam em `Códigos/secrets.h`, que **não é versionad
 | T5 | Pareamento do DualSense com o ESP32 via Bluepad32 | ✅ Passou | Seção 25.2 |
 | T6 | Controle diferencial com os dois sticks | ✅ Passou | — |
 | T7 | Freio de segurança a 20 cm, com ré e giro liberados | ✅ Passou | — |
-| T8 | Calibração dos motores pela página web | ✅ Passou | Seção 24.5 |
-| T9 | Atualização de firmware por OTA | ✅ Passou | Seção 24.6 |
+| T8 | Calibração dos motores pela página web | ✅ Passou | Seção 24.6 |
+| T9 | Atualização de firmware por OTA | ✅ Passou | Seção 24.7 |
 | T10 | Locomoção com o corpo montado, fechado e com o acabamento aplicado | ✅ Passou | Seção 28.3 |
 
 ### 25.2 Problemas encontrados e correções
@@ -1073,7 +1122,7 @@ O SSID e a senha do Wi-Fi ficam em `Códigos/secrets.h`, que **não é versionad
 |---|---|---|---|
 | P1 | App "BLE Controller" não conectava no módulo HC-05 | HC-05 usa Bluetooth **clássico** (SPP), não BLE | Troca para o app "Arduino Bluetooth Controller", compatível com SPP |
 | P2 | Um motor girava ao contrário do outro com o mesmo comando | Motores montados espelhados no corpo | Inversão da ordem dos canais PWM na função `aplicaMotorB()`, em vez de reinverter os fios |
-| P3 | Robô não andava reto — puxava sempre para o mesmo lado | Diferença de rotação natural entre dois motores DC | Fatores de correção por motor, ajustáveis pela página web e salvos em NVS (seção 24.5) |
+| P3 | Robô não andava reto — puxava sempre para o mesmo lado | Diferença de rotação natural entre dois motores DC | Fatores de correção por motor, ajustáveis pela página web e salvos em NVS (seção 24.6) |
 | P4 | Robô se movia sozinho com os sticks em repouso | Ruído/desgaste do potenciômetro do analógico | Zona morta de 80 unidades (~15%) aplicada aos dois eixos |
 | P5 | Tranco no arranque, com o robô empinando e a roda patinando | Aplicação de PWM máximo instantaneamente | Rampa de aceleração: 12 unidades a cada 15 ms |
 | P6 | Loop travava por instantes quando não havia obstáculo à frente | `pulseIn` esperava o eco até o timeout padrão | Timeout reduzido para 15 ms (~2,5 m) e leitura limitada a 1 a cada 60 ms |
@@ -1187,7 +1236,7 @@ Quatro registros do robô finalizado em operação, somando cerca de um minuto. 
 | [`vídeo/funcionamento-3.mp4`](<vídeo/funcionamento-3.mp4>) | 17 s |
 | [`vídeo/funcionamento-4.mp4`](<vídeo/funcionamento-4.mp4>) | 14 s |
 
-A demonstração específica do **sensor de aproximação** está no vídeo da etapa de bancada, [`vídeo/Motor + Sensor de Aproximação.mp4`](<vídeo/Motor + Sensor de Aproximação.mp4>) (seção 21.2), no qual os motores param automaticamente quando o HC-SR04 detecta um objeto à frente. A mesma lógica, com a distância mínima de 20 cm, está no firmware final (seção 24.4).
+A demonstração específica do **sensor de aproximação** está no vídeo da etapa de bancada, [`vídeo/Motor + Sensor de Aproximação.mp4`](<vídeo/Motor + Sensor de Aproximação.mp4>) (seção 21.2), no qual os motores param automaticamente quando o HC-SR04 detecta um objeto à frente. A mesma lógica, com a distância mínima de 20 cm, está no firmware final (seção 24.5).
 
 > O GitHub não reproduz vídeo dentro da página do Markdown. Ao clicar no link, o GitHub abre a página do arquivo `.mp4` e exibe um player nativo com botão de play.
 
