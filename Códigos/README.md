@@ -25,7 +25,7 @@ Carrinho de tração diferencial controlado por um **controle PS5 DualSense** vi
 - 2 motores DC TT com caixa de redução
 - Sensor ultrassônico HC-SR04
 - Controle PS5 DualSense
-- 4 × pilhas AA
+- 6 × pilhas AA
 
 ### Pinagem
 

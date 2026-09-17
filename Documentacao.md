@@ -83,7 +83,7 @@ A tabela abaixo apresenta a **ficha final**, com o que foi planejado e o que efe
 | Sensor de distância | HC-SR04 | HC-SR04, frontal ✔ |
 | Elemento de tração | 2 rodas motrizes | 2 rodas motrizes de borracha, acopladas por extensor de eixo ✔ |
 | Roda de apoio | 1 roda caster | Roda boba traseira modelada pela equipe ✔ |
-| Alimentação | Pilhas não recarregáveis, posição central/inferior | 4 × pilhas AA em suporte com chave liga/desliga |
+| Alimentação | Pilhas não recarregáveis, posição central/inferior | 6 × pilhas AA em suporte com chave liga/desliga |
 | Controle remoto | Sem fio, via recursos do ESP32 | **Controle PS5 DualSense**, Bluetooth clássico via Bluepad32 |
 | Material do chassi | Impressão 3D | Impressão 3D em PLA ✔ |
 | Material da carenagem | A definir | **Não há peça separada** — o corpo impresso é chassi e carenagem |
@@ -135,7 +135,7 @@ Os parâmetros abaixo estavam pendentes na concepção e foram **fechados durant
 
 | Parâmetro | Valor final | Onde foi definido |
 |---|---|---|
-| Alimentação | 4 × pilhas AA alcalinas, suporte com chave liga/desliga | Planilha de custos |
+| Alimentação | 6 × pilhas AA alcalinas (9 V nominais), suporte com chave liga/desliga | Montagem final |
 | Modelo dos motores | Motor DC TT 3–6 V com caixa de redução, eixo duplo | Planilha de custos |
 | Elemento de tração | 2 rodas de borracha acopladas ao eixo do motor pelo extensor impresso | Montagem final |
 | Roda de apoio | Roda boba de 86 × 36 × 15 mm, modelada pela equipe | Modelagem 3D |
@@ -165,8 +165,8 @@ Os parâmetros abaixo estavam pendentes na concepção e foram **fechados durant
 | Placa controladora ESP32 Dev Module | 1 | Processamento, controle e comunicação sem fio | Comercial |
 | Ponte H dupla (L298N) | 1 | Acionamento dos dois motores DC | Comercial |
 | Sensor ultrassônico HC-SR04 | 1 | Detecção de obstáculos | Comercial |
-| Suporte de pilhas 4 × AA com chave | 1 | Alimentação do sistema | Comercial |
-| Pilhas AA alcalinas | 4 | Fonte de energia | Comercial |
+| Suporte de pilhas 6 × AA com chave | 1 | Alimentação do sistema | Comercial |
+| Pilhas AA alcalinas | 6 | Fonte de energia | Comercial |
 | Controle PS5 DualSense | 1 | Envio de comandos ao robô | Comercial |
 | Jumpers e cabos | — | Ligações entre os módulos | Comercial |
 
@@ -186,7 +186,7 @@ flowchart TD
     PONTEH -- acionamento --> MOTORD[Motor Direito]
     MOTORE --> RODAE[Roda Esquerda]
     MOTORD --> RODAD[Roda Direita]
-    BAT[4x Pilhas AA] -- alimentacao --> PONTEH
+    BAT[6x Pilhas AA] -- alimentacao --> PONTEH
     BAT -- alimentacao --> ESP32
 ```
 
@@ -914,7 +914,7 @@ Os renders das 16 chapas de impressão estão em [`Modelo 3d/renders/`](<Modelo 
   roda  │  │                              │  │   roda   ← rodas de borracha
   motriz│  │  MOTOR ESQ      MOTOR DIR    │  │   motriz    no eixo dos motores
         │  │    (travessa interna)        │  │
-        │  │  SUPORTE 4x PILHAS AA        │  │
+        │  │  SUPORTE 6x PILHAS AA        │  │
         │  └──────────────────────────────┘  │
         └────────────────────────────────────┘
           ╲___ conjuntos laterais impressos ___╱
@@ -1037,7 +1037,7 @@ flowchart LR
 ### 24.4 Alimentação
 
 ```
-4x PILHAS AA (suporte com chave)
+6x PILHAS AA -- 9 V nominais (suporte com chave)
    │
    ▼
 PONTE H ──► MOTOR ESQUERDO
@@ -1047,7 +1047,9 @@ PONTE H ──► MOTOR ESQUERDO
 ESP32 ──► HC-SR04 (3,3 V)
 ```
 
-O conjunto de 4 pilhas AA alimenta a ponte H, que fornece a tensão regulada ao ESP32; o ESP32, por sua vez, alimenta o sensor em 3,3 V. A chave do suporte de pilhas é o liga/desliga geral do robô.
+O conjunto de 6 pilhas AA fornece cerca de **9 V nominais** e alimenta a ponte H, que por sua vez entrega tensão regulada ao ESP32; o ESP32 alimenta o sensor em 3,3 V. A chave do suporte de pilhas é o liga/desliga geral do robô.
+
+A escolha de 6 pilhas em vez de 4 não é detalhe: o L298N consome cerca de 2 V internamente entre a entrada e a saída de potência. Com 4 pilhas (6 V), sobrariam aproximadamente 4 V para os motores e o regulador interno ficaria no limite para alimentar o ESP32. Com 6 pilhas, os motores recebem tensão suficiente para manter torque sob carga e o regulador trabalha com folga.
 
 ### 24.5 Funcionamento do firmware
 

@@ -52,7 +52,7 @@ Mais fotos em [`imagens/robo-final/`](imagens/robo-final).
 | Tração | 2WD diferencial, 2 rodas laterais + apoio frontal impresso |
 | Sensor | HC-SR04 frontal, detecção a 20 cm |
 | Controle | PS5 DualSense (Bluepad32) |
-| Alimentação | 4 × pilhas AA com chave liga/desliga |
+| Alimentação | 6 × pilhas AA com chave liga/desliga |
 | Estrutura | Corpo impresso em PLA — 204,4 × 126,0 × 77,7 mm |
 
 ## Como usar
