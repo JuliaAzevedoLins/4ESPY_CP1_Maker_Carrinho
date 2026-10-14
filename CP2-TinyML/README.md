@@ -17,7 +17,8 @@ HC-SR04 → CSV → Edge Impulse → treino → biblioteca Arduino → ESP32 →
 | Teste | **94,04%** de acurácia: `inseguro` 98,4%, `seguro` 90,6% |
 | No ESP32 (estimativa do Edge Impulse) | 1 ms por inferência, 1,4 KB de RAM, 16,4 KB de flash |
 | Firmware completo | Compila; 98% da memória de programa |
-| Execução no carrinho | v1 e v2 testadas (logs em [`evidencias/`](evidencias)); v3 ⏳ (seção 33.2 da documentação) |
+| Execução no carrinho (v3) | ✅ 7 freadas a 21–32 cm/s (`inseguro` 82–96%), quase todas a 34–42 cm. Aproximações lentas, de 6–9 cm/s, sem freio. Logs em [`evidencias/`](evidencias) |
+| Alimentação | Com pilhas gastas, o ESP32 reiniciava por brownout. Com pilhas novas, nenhum reinício (seção 32.6 da documentação) |
 
 Detalhes, matrizes de confusão, histórico das versões e prints estão nas seções 29 a 33 da [documentação técnica](<../Documentacao.md>). Os prints ficam em [`edge-impulse/prints/`](edge-impulse/prints), um subdiretório por versão.
 
@@ -41,7 +42,7 @@ O modelo não olha uma leitura isolada, e sim **como a distância varia** numa j
 |---|---|---|---|
 | Classes | vazio, parado, aproximando, aceno | As mesmas 4 | **seguro, inseguro** |
 | Teste no Edge Impulse | 85,0% | 87,3% | **94,04%** |
-| No carrinho | Aceno × aproximação se confundiam | Manobras funcionaram, mas as fronteiras entre 4 classes seguiram instáveis | ⏳ |
+| No carrinho | Aceno × aproximação se confundiam | Manobras funcionaram, mas as fronteiras entre 4 classes seguiram instáveis | ✅ Freia nas aproximações rápidas e deixa chegar devagar |
 
 Os testes no carrinho mostraram que as confusões estavam em fronteiras finas entre classes parecidas. Por isso a v3 trocou as quatro classes por uma decisão de segurança: frear quando algo se aproxima rápido demais, só perto de algo.
 

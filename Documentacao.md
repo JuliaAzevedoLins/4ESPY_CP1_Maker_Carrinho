@@ -1489,7 +1489,7 @@ O firmware do CP2 ([`CP2-TinyML/firmware/PS5_ESP32_TinyML/`](<CP2-TinyML/firmwar
 
 - **Biblioteca:** a exportada pelo Edge Impulse é instalada pelo Arduino IDE (*Add .ZIP Library*) e incluída com `#include <carrinho_walle_tinyml_v3_inferencing.h>`.
 - **Placa:** `esp32_bluepad32 3.10.x > ESP32 Dev Module`, partição padrão com OTA e *Compiler warnings* em *Default*.
-- **Tamanho:** o firmware completo ocupa **98% da memória de programa** (1.291.569 bytes); o do CP1 ocupava 90%.
+- **Tamanho:** o firmware completo ocupa **98% da memória de programa** (1.292.353 bytes); o do CP1 ocupava 90%.
 - **Gravação por OTA:** pela porta de rede `carrinho-esp32` do Arduino IDE. Se o firewall do Windows bloquear o `espota.exe`, use o script Python que vem no mesmo pacote:
 
 ```bash
@@ -1530,7 +1530,7 @@ A partir da v3, o modelo **nunca move o carrinho sozinho**: ele só tira o avan�
 | Onde | O que mostra |
 |---|---|
 | Barra de luz do DualSense | Verde (`longe`), amarela (`seguro`), vermelha (`inseguro`), mais vibração ao frear |
-| Painel web (`http://<ip-do-esp32>/`) | Estado, "FREIO", saída do modelo, confiança, probabilidades, tempo de inferência e contador, atualizados a cada 200 ms |
+| Painel web (`http://<ip-do-esp32>/`) | Estado, "FREIO", saída do modelo, confiança, probabilidades, tempo de inferência e contador, atualizados a cada 200 ms. No rodapé, há quanto tempo o ESP32 está ligado e o motivo do último reinício |
 | `GET /get` + [`monitorar.py`](<CP2-TinyML/ferramentas/monitorar.py>) | O mesmo em JSON. O script grava uma linha por leitura do sensor em CSV, como evidência |
 | Serial Monitor (115200) | Uma linha por inferência: `TinyML \| dist <cm> \| inseguro <p> seguro <p> \| <ms> ms -> <classe>`, mais cada mudança de estado |
 
@@ -1538,6 +1538,26 @@ A partir da v3, o modelo **nunca move o carrinho sozinho**: ele só tira o avan�
 
 - A calibração dos motores passou a ser carregada **antes** do Wi-Fi. No CP1 ela só era lida com a rede conectada, e sem Wi-Fi o robô voltava a puxar para um lado.
 - A distância passou a ser `float` e o "sem leitura" virou 200 cm, em vez de −1, para ser o mesmo valor que o modelo recebe.
+
+### 32.6 Alimentação: brownout encontrado nos testes da v3
+
+Nos testes da v3 com o carrinho no chão, o controle desconectava. O log mostrou que o **ESP32 estava reiniciando**: o contador de leituras voltava a zero em qualquer estado, inclusive `longe` e sem freio. Para descobrir o motivo, o firmware passou a mostrar o resultado de `esp_reset_reason()` no painel, em `/get` e no log. O motivo era **brownout**, ou seja, queda de tensão.
+
+A alimentação é 6 × AA → regulador de 5 V da ponte H → VIN do ESP32 (seção 24.4). Com as pilhas já gastas por um dia de testes, o pico de corrente dos motores no chão derrubava a tensão abaixo do mínimo do ESP32.
+
+| Mudança no firmware | Antes | Depois | Efeito |
+|---|---|---|---|
+| Potência de transmissão do Wi-Fi | Padrão | 11 dBm | Picos menores de Wi-Fi + Bluetooth |
+| Rampa de aceleração | 12 a cada 15 ms (~0,25 s) | 6 a cada 15 ms (~0,5 s) | Arranque com menos corrente. O freio do modelo continua instantâneo |
+| Velocidade máxima inicial | 200 | 170 (o R2 ainda sobe até 255) | Menos corrente em velocidade máxima |
+
+As mudanças reduziram os reinícios de 2 para 1 a cada 2,5 min, mas não os eliminaram. **Com pilhas novas, não houve nenhum reinício** em 5,5 min contínuos de teste (seção 33.2).
+
+Para a apresentação, o caminho mais robusto é alimentar o ESP32 separado dos motores, por um power bank USB:
+- retirar o fio do +5V da ponte H que vai ao VIN;
+- manter o GND em comum.
+
+Outra opção é um capacitor de 470–1000 µF entre o VIN e o GND do ESP32.
 
 ---
 
@@ -1553,6 +1573,7 @@ A partir da v3, o modelo **nunca move o carrinho sozinho**: ele só tira o avan�
 | Firmware v3 compila com a biblioteca v3 | ✅ 98% da memória de programa |
 | Treino e teste no Edge Impulse (v3) | ✅ Validação 96,5% (int8), teste 94,04% |
 | Modelos v1 e v2 gravados por OTA e rodando no carrinho | ✅ Logs na seção 33.2 |
+| Modelo v3 gravado por OTA e freando o carrinho | ✅ 7 freadas com pilhas novas, sem nenhum reinício (seção 33.2) |
 
 ### 33.2 Testes no carrinho
 
@@ -1570,21 +1591,27 @@ Os testes foram registrados pela rede com `monitorar.py`, sem cabo serial.
 - A aproximação lenta (39 → 22 cm em cerca de 4 s) continuou virando `parado`.
 - O carrinho ficou sem responder na rede por cerca de 9 min e reiniciou sozinho, compatível com queda de tensão das pilhas quando os motores puxam corrente.
 
-**Teste 3: modelo v3**
+**Teste 3: modelo v3** ([`inferencias-teste-v3-no-carrinho.csv`](<CP2-TinyML/evidencias/inferencias-teste-v3-no-carrinho.csv>) e [`inferencias-teste-v3-no-carrinho-2.csv`](<CP2-TinyML/evidencias/inferencias-teste-v3-no-carrinho-2.csv>), uma linha por leitura do sensor)
 
-| # | Teste | Situação |
+*3a. Com as pilhas do dia (16:20–16:46)*
+- O modelo e o freio funcionaram: 6 freadas, com `inseguro` entre 84% e 97% a 31–37 cm.
+- O ESP32 **reiniciou 8 vezes**, e o controle desconectava a cada reinício. Três desses reinícios aconteceram depois de gravado o diagnóstico, e os três foram registrados como **brownout**.
+- A investigação e as mudanças estão na seção 32.6.
+
+*3b. Com pilhas novas (18:13–18:18, 5,5 min contínuos):* **nenhum reinício.**
+
+| # | Teste | Resultado |
 |---|---|---|
-| T21 | Longe de tudo (> 50 cm): luz verde, modelo em espera, anda normal | ⏳ A executar |
-| T22 | Chegando **devagar** a uma parede: luz amarela, sem freio, para no freio de 20 cm | ⏳ A executar |
-| T23 | Indo **rápido** contra uma parede: luz vermelha, vibração e freio antes dos 20 cm | ⏳ A executar |
-| T24 | Com o carrinho parado, mão vindo rápido até o sensor: luz vermelha e vibração | ⏳ A executar |
-| T25 | Depois do freio: ré e giro liberados; o avanço volta com `seguro` | ⏳ A executar |
-| T26 | Girando perto de uma parede: sem freio indevido | ⏳ A executar |
+| T21 | Longe de tudo (> 50 cm): luz verde, modelo em espera | ✅ 694 leituras em `longe`, sem inferência |
+| T22 | Chegando **devagar** | ✅ Aproximações de cerca de 6–9 cm/s (por exemplo, 49,6 → 10,9 cm em 6 s) ficaram `seguro`, sem freio do modelo |
+| T23 | Indo **rápido** | ✅ **7 freadas**, com aproximação de 21–32 cm/s e `inseguro` entre 82% e 96%. Cinco aconteceram entre 34 e 42 cm, logo depois de entrar na zona de 50 cm. Em 6 das 7, a distância parou de cair em até 3,5 cm depois da freada |
+| T24–T26 | Mão rápida com o carrinho parado; ré e giro depois do freio; giro perto da parede | ✅ Funcionaram segundo a equipe, nos testes e na gravação do vídeo. O log registra o sensor, e não os comandos do controle, então não separa esses casos |
 
 ### 33.3 Limitações conhecidas
 
 - **Dados simulados.** O modelo aprendeu o comportamento *simulado* do HC-SR04, calibrado com o log real. No sensor real, ângulo de reflexão e superfícies podem diferir da simulação, e o desempenho no carrinho pode ser menor que os 94% do teste. O caminho para corrigir já está pronto: coletar com [`CP2-TinyML/coleta/`](<CP2-TinyML/coleta>), enviar ao mesmo projeto, retreinar e exportar. O firmware não muda.
-- **A fronteira de cerca de 20 cm/s não foi medida no carrinho.** Ela vem da simulação. Se a velocidade "devagar" do carrinho real ficar acima disso, o freio vai atuar também nela. Nesse caso, basta reduzir a velocidade máxima no gatilho L2 ou regenerar o dataset com outra faixa.
+- **A fronteira de cerca de 20 cm/s vem da simulação.** No carrinho, ela se confirmou: aproximações de 21–32 cm/s frearam, e as de 6–9 cm/s não. Se a velocidade "devagar" de algum piloto ficar acima dela, o freio também atua. Nesse caso, basta reduzir a velocidade máxima no gatilho L2 ou regenerar o dataset com outra faixa.
+- **Alimentação por pilhas AA.** Com pilhas gastas, o ESP32 reinicia por brownout quando os motores fazem força (seção 32.6). A correção definitiva é alimentar o ESP32 separado dos motores.
 - **Freadas sem necessidade** (8,1% das janelas `seguro` no teste) acontecem sobretudo em giros perto de paredes. Elas só tiram o avanço por cerca de 1 s.
 - **Feixe estreito.** O HC-SR04 só vê o que está à frente. Obstáculos laterais ou baixos não entram na decisão.
 

@@ -43,6 +43,7 @@ No CP2 o mesmo carrinho passou a rodar um **modelo de Machine Learning treinado 
 | Modelo | Raw Data + Flatten, rede densa 40/20, int8. Validação **96,5%**, teste **94,04%** |
 | No ESP32 | 1 ms por inferência, 1,4 KB de RAM (estimativa); firmware em 98% da memória de programa |
 | Versões | v1 e v2 (4 classes) testadas no carrinho; a v3 (2 classes) nasceu desses testes |
+| No carrinho (v3) | 7 freadas em aproximações de 21–32 cm/s; aproximações lentas sem freio |
 
 ## O carrinho finalizado
 
@@ -163,5 +164,5 @@ Os artefatos de planejamento (MVP, MoSCoW, backlog, dependências, kanban e cust
 - [x] Treino, teste e exportação no Edge Impulse (v1, v2 e v3)
 - [x] Firmware com inferência embarcada e ações no carrinho
 - [x] Gravação e teste no carrinho das versões v1 e v2 (logs em `CP2-TinyML/evidencias/`)
-- [ ] Gravação e teste no carrinho da v3
-- [ ] Vídeo da demonstração
+- [x] Gravação e teste no carrinho da v3: 7 freadas, nenhum reinício com pilhas novas
+- [x] Vídeo da demonstração gravado
