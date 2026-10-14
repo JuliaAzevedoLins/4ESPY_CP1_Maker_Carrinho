@@ -1,22 +1,23 @@
 /*
-  CP2 | TinyML -- firmware do carrinho WALL-E com modelo embarcado
+  CP2 | TinyML -- firmware do carrinho WALL-E com modelo embarcado (v3)
 
   Evolucao do firmware do CP1 (Codigos/PS5_ESP32_Bluepad32.ino). Continua
   igual: controle PS5, rampa, zona morta, freio de 20 cm, calibracao web e OTA.
 
   O que entra no CP2:
   - o HC-SR04 e lido em ritmo fixo (o mesmo do treino) e as ultimas leituras
-    ficam numa janela deslizante;
-  - a cada INFERENCIA_PASSO leituras novas, o modelo do Edge Impulse classifica
-    a janela em: vazio / parado / aproximando / aceno;
-  - a classe muda o comportamento do carrinho (ver aplicaClasse()):
-      vazio        -> luz verde no controle, velocidade normal
-      parado       -> luz amarela, avanco limitado a 50%
-      aproximando  -> luz vermelha; parado: WALL-E "se assusta" e da re
-      aceno        -> luz azul;     parado: WALL-E "cumprimenta" (balanca)
+    ficam numa janela deslizante de 1,8 s;
+  - com algo a menos de PERTO_CM (50 cm), a cada leitura nova (60 ms)
+    o modelo do Edge Impulse classifica a janela em: seguro / inseguro
+    (inseguro = a distancia esta diminuindo rapido);
+  - o estado muda o comportamento do carrinho (ver mudaEstado()):
+      longe     -> nada a menos de 50 cm: modelo em espera, luz verde, anda normal
+      seguro    -> perto, aproximacao lenta ou parado: luz amarela, anda normal
+      inseguro  -> perto e aproximando rapido: luz vermelha, vibra e FREIA
+                   (corta o avanco na hora; re e giro continuam liberados)
 */
 
-#include <carrinho_walle_tinyml_v2_inferencing.h>   // biblioteca exportada do Edge Impulse (modelo v2)
+#include <carrinho_walle_tinyml_v3_inferencing.h>   // biblioteca exportada do Edge Impulse (modelo v3)
 #include <Bluepad32.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -69,52 +70,36 @@ const unsigned long SENSOR_INTERVALO = (unsigned long)(EI_CLASSIFIER_INTERVAL_MS
 
 float distanciaCm = DIST_MAX_CM;
 unsigned long proximaLeitura = 0;
+unsigned long totalLeituras = 0;
 
 // ---- TinyML ----
 const int   JANELA            = EI_CLASSIFIER_RAW_SAMPLE_COUNT;  // leituras por inferencia
-const int   INFERENCIA_PASSO  = 3;       // infere a cada 3 leituras novas (180 ms)
+const float PERTO_CM          = 50.0f;   // o modelo so e consultado com algo mais perto que isso
+const int   INFERENCIA_PASSO  = 1;       // perto de algo, infere a cada leitura nova (60 ms; leva ~1 ms)
 const float CONFIANCA_MIN     = 0.80f;   // abaixo disso, a classificacao e ignorada
-const int   CONFIRMACOES      = 3;       // inferencias seguidas iguais para aceitar a classe (540 ms)
-const unsigned long OCIOSO_MS = 500;     // sticks soltos por esse tempo = robo parado
-const unsigned long PAUSA_POS_MANOBRA_MS = 2000;  // janela inteira sem o movimento do proprio robo
+const int   CONFIRMA_INSEGURO = 3;       // inferencias seguidas para frear (180 ms)
+const int   CONFIRMA_SEGURO   = 5;       // inferencias seguidas para liberar (300 ms)
+const unsigned long FREIO_MIN_MS = 1000; // freio segura pelo menos isso depois do ultimo "inseguro"
 
 float janela[JANELA];        // buffer circular com as ultimas leituras
 int   posJanela = 0;
 int   leiturasNaJanela = 0;
-int   leiturasDesdeInferencia = 0;
+int   leiturasDesdeInferencia = INFERENCIA_PASSO;
+bool  perto = false;
 
-enum Classe { C_VAZIO, C_PARADO, C_APROXIMANDO, C_ACENO, C_INCERTO };
-const char* NOME_CLASSE[] = {"vazio", "parado", "aproximando", "aceno", "incerto"};
+// seguro/inseguro vem do modelo; incerto e longe sao estados do firmware
+enum Classe { C_SEGURO, C_INSEGURO, C_INCERTO, C_LONGE };
+const char* NOME_CLASSE[] = {"seguro", "inseguro", "incerto", "longe"};
 
-Classe classeAtual   = C_VAZIO;   // classe confirmada que esta valendo
+Classe estadoAtual   = C_LONGE;     // o que esta valendo no carrinho
+Classe ultimaClasse  = C_INCERTO;   // saida da ultima inferencia
 Classe candidata     = C_INCERTO;
 int    repeticoes    = 0;
 float  confiancaAtual = 0;
 float  probs[EI_CLASSIFIER_LABEL_COUNT];
 int    tempoInferenciaMs = 0;
 unsigned long totalInferencias = 0;
-
-// ---- Manobras disparadas pelo modelo ----
-struct Passo { int a; int b; unsigned long ms; };
-
-const Passo SUSTO[] = {            // "aproximando": recua
-  {-190, -190, 600},
-  {   0,    0, 200},
-};
-const Passo CUMPRIMENTO[] = {      // "aceno": balanca esquerda-direita
-  { 170, -170, 300},
-  {-170,  170, 300},
-  { 170, -170, 300},
-  {-170,  170, 300},
-  {   0,    0, 200},
-};
-
-const Passo* manobra = nullptr;
-int manobraPassos = 0;
-int manobraIndice = 0;
-unsigned long inicioPasso = 0;
-unsigned long fimUltimaManobra = 0;
-unsigned long ultimoComando = 0;   // ultima vez que um stick saiu da zona morta
+unsigned long ultimoInseguro = 0;   // ultima vez que "inseguro" foi confirmado
 
 // ---- Calibracao dos motores (0.30 a 1.00), ajustavel pela tela web ----
 float trimA = 1.0f;
@@ -156,6 +141,15 @@ void atualizaRampa() {
   aplicaMotorB(atualB);
 }
 
+// Corta o avanco na hora, sem rampa (re e giro continuam liberados)
+void freiaAgora() {
+  if (atualA + atualB <= 0) return;   // nao esta indo pra frente
+  alvoA = 0; alvoB = 0;
+  atualA = 0; atualB = 0;
+  aplicaMotorA(0);
+  aplicaMotorB(0);
+}
+
 // ---------------- Sensor ----------------
 
 // Mesma funcao do firmware de coleta (coleta/coleta_hcsr04): o modelo
@@ -185,19 +179,28 @@ bool atualizaSensorDistancia() {
   janela[posJanela] = distanciaCm;
   posJanela = (posJanela + 1) % JANELA;
   if (leiturasNaJanela < JANELA) leiturasNaJanela++;
+  totalLeituras++;
   return true;
+}
+
+// Mediana das 3 ultimas leituras: uma falha de eco isolada (200 cm) nao
+// tira o carrinho do modo "perto".
+float distanciaFiltrada() {
+  float a = janela[(posJanela + JANELA - 1) % JANELA];
+  float b = janela[(posJanela + JANELA - 2) % JANELA];
+  float c = janela[(posJanela + JANELA - 3) % JANELA];
+  return max(min(a, b), min(max(a, b), c));
 }
 
 // ---------------- Controle ----------------
 
-// Cor da barra de luz do DualSense para cada classe
-void mostraClasseNoControle(Classe c) {
+// Cor da barra de luz do DualSense para cada estado
+void mostraEstadoNoControle(Classe c) {
   if (meuControle == nullptr || !meuControle->isConnected()) return;
   switch (c) {
-    case C_VAZIO:       meuControle->setColorLED(0, 255, 0);   break;
-    case C_PARADO:      meuControle->setColorLED(255, 160, 0); break;
-    case C_APROXIMANDO: meuControle->setColorLED(255, 0, 0);   break;
-    case C_ACENO:       meuControle->setColorLED(0, 60, 255);  break;
+    case C_LONGE:    meuControle->setColorLED(0, 255, 0);   break;
+    case C_SEGURO:   meuControle->setColorLED(255, 160, 0); break;
+    case C_INSEGURO: meuControle->setColorLED(255, 0, 0);   break;
     default: break;
   }
 }
@@ -212,7 +215,7 @@ void onConnectedController(ControllerPtr ctl) {
   if (meuControle == nullptr) {
     Serial.println("Controle conectado!");
     meuControle = ctl;
-    mostraClasseNoControle(classeAtual);
+    mostraEstadoNoControle(estadoAtual);
   } else {
     Serial.println("Outro controle tentou conectar, ignorado (ja tem um em uso).");
   }
@@ -226,64 +229,34 @@ void onDisconnectedController(ControllerPtr ctl) {
   }
 }
 
-// ---------------- Manobras ----------------
-
-bool manobraAtiva() { return manobra != nullptr; }
-
-void iniciaManobra(const Passo* passos, int n) {
-  manobra = passos;
-  manobraPassos = n;
-  manobraIndice = 0;
-  inicioPasso = millis();
-  alvoA = manobra[0].a;
-  alvoB = manobra[0].b;
-}
-
-void encerraManobra() {
-  manobra = nullptr;
-  alvoA = 0; alvoB = 0;
-  fimUltimaManobra = millis();
-  candidata = C_INCERTO;   // a proxima classe sai de leituras novas
-  repeticoes = 0;
-}
-
-void atualizaManobra() {
-  if (!manobraAtiva()) return;
-  if (millis() - inicioPasso < manobra[manobraIndice].ms) return;
-  manobraIndice++;
-  if (manobraIndice >= manobraPassos) { encerraManobra(); return; }
-  inicioPasso = millis();
-  alvoA = manobra[manobraIndice].a;
-  alvoB = manobra[manobraIndice].b;
-}
-
-bool roboOcioso() {
-  return !manobraAtiva()
-      && millis() - ultimoComando > OCIOSO_MS
-      && atualA == 0 && atualB == 0
-      && millis() - fimUltimaManobra > PAUSA_POS_MANOBRA_MS;
-}
-
 // ---------------- Inferencia ----------------
 
+bool freioAtivo() { return estadoAtual == C_INSEGURO; }
+
+// O que cada estado faz no carrinho
+void mudaEstado(Classe c) {
+  if (c == C_INSEGURO) {
+    ultimoInseguro = millis();            // renova o freio
+    freiaAgora();
+  } else if (freioAtivo() && millis() - ultimoInseguro < FREIO_MIN_MS) {
+    return;                               // freio segura o tempo minimo
+  }
+  if (c == estadoAtual) return;
+  estadoAtual = c;
+  mostraEstadoNoControle(c);
+  Serial.print("TinyML | estado: ");
+  Serial.println(NOME_CLASSE[c]);
+  if (c == C_INSEGURO) {
+    Serial.println("TinyML | acao: freio (aproximacao rapida)");
+    vibraControle();
+  }
+}
+
 Classe classeDoRotulo(const char* rotulo) {
-  for (int c = C_VAZIO; c < C_INCERTO; c++) {
+  for (int c = C_SEGURO; c < C_INCERTO; c++) {
     if (strcmp(rotulo, NOME_CLASSE[c]) == 0) return (Classe)c;
   }
   return C_INCERTO;
-}
-
-// O que cada classe faz no carrinho
-void aplicaClasse(Classe c) {
-  if (!roboOcioso()) return;   // manobras so com o robo parado e sem piloto mexendo
-  if (c == C_APROXIMANDO) {
-    Serial.println("TinyML | acao: susto (re)");
-    vibraControle();
-    iniciaManobra(SUSTO, sizeof(SUSTO) / sizeof(SUSTO[0]));
-  } else if (c == C_ACENO) {
-    Serial.println("TinyML | acao: cumprimento (balanca)");
-    iniciaManobra(CUMPRIMENTO, sizeof(CUMPRIMENTO) / sizeof(CUMPRIMENTO[0]));
-  }
 }
 
 void rodaInferencia() {
@@ -311,6 +284,8 @@ void rodaInferencia() {
     if (probs[i] > probs[melhor]) melhor = i;
   }
   Classe c = probs[melhor] >= CONFIANCA_MIN ? classeDoRotulo(resultado.classification[melhor].label) : C_INCERTO;
+  ultimaClasse = c;
+  confiancaAtual = probs[melhor];
 
   Serial.print("TinyML | dist ");
   Serial.print(distanciaCm, 1);
@@ -326,18 +301,32 @@ void rodaInferencia() {
   Serial.print(" ms -> ");
   Serial.println(NOME_CLASSE[c]);
 
-  // Confirmacao: a mesma classe em inferencias seguidas
+  // Confirmacao: a mesma classe em inferencias seguidas (frear e mais rapido que liberar)
   if (c == C_INCERTO) { repeticoes = 0; candidata = C_INCERTO; return; }
   if (c == candidata) repeticoes++;
   else { candidata = c; repeticoes = 1; }
-  if (repeticoes < CONFIRMACOES) return;
+  if (repeticoes < (c == C_INSEGURO ? CONFIRMA_INSEGURO : CONFIRMA_SEGURO)) return;
 
-  if (c != classeAtual) {
-    classeAtual = c;
-    mostraClasseNoControle(classeAtual);
+  mudaEstado(c);
+}
+
+// Chamado a cada leitura nova do sensor
+void atualizaTinyML() {
+  if (leiturasNaJanela < JANELA) return;   // janela ainda enchendo (logo apos ligar)
+
+  perto = distanciaFiltrada() < PERTO_CM;
+  if (!perto) {
+    // Nada a menos de 50 cm: o modelo fica em espera (o freio ainda segura o tempo minimo)
+    candidata = C_INCERTO;
+    repeticoes = 0;
+    leiturasDesdeInferencia = INFERENCIA_PASSO;   // ao chegar perto, infere na hora
+    mudaEstado(C_LONGE);
+    return;
   }
-  confiancaAtual = probs[melhor];
-  aplicaClasse(classeAtual);
+  if (++leiturasDesdeInferencia >= INFERENCIA_PASSO) {
+    leiturasDesdeInferencia = 0;
+    rodaInferencia();
+  }
 }
 
 // ---------------- Tela web de calibracao ----------------
@@ -394,7 +383,7 @@ const char PAGINA_HTML[] PROGMEM = R"rawliteral(
   <p class="aviso">Os valores sao salvos automaticamente no ESP32.</p>
 
 <script>
-const CORES = { vazio:'#4caf50', parado:'#ffb300', aproximando:'#f44336', aceno:'#2979ff' };
+const CORES = { longe:'#4caf50', seguro:'#ffb300', inseguro:'#f44336' };
 let editando = false;
 function carregar() {
   fetch('/get').then(r => r.json()).then(d => {
@@ -406,11 +395,11 @@ function carregar() {
     }
     document.getElementById('valDist').innerText = d.dist >= 200 ? 'sem leitura' : d.dist.toFixed(1) + ' cm';
     const el = document.getElementById('classe');
-    el.innerText = d.classe;
-    el.style.color = CORES[d.classe] || '#eee';
-    document.getElementById('detalhe').innerText =
-      'confianca ' + Math.round(d.conf * 100) + '% | inferencia ' + d.ms + ' ms | ' + d.n + ' inferencias' +
-      (d.manobra ? ' | manobra em curso' : '');
+    el.innerText = d.estado + (d.freio ? ' - FREIO' : '');
+    el.style.color = CORES[d.estado] || '#eee';
+    document.getElementById('detalhe').innerText = d.perto
+      ? 'modelo: ' + d.modelo + ' ' + Math.round(d.conf * 100) + '% | inferencia ' + d.ms + ' ms | ' + d.n + ' inferencias'
+      : 'nada a menos de 50 cm: modelo em espera | ' + d.n + ' inferencias';
     let html = '';
     for (const k in d.probs) {
       html += '<div class="prob"><span>' + k + ' ' + Math.round(d.probs[k] * 100) + '%</span><div><i style="width:' +
@@ -445,11 +434,14 @@ void handleRoot() {
 void handleGet() {
   String json = "{\"a\":" + String(trimA, 2) + ",\"b\":" + String(trimB, 2) +
                 ",\"dist\":" + String(distanciaCm, 1) +
-                ",\"classe\":\"" + NOME_CLASSE[classeAtual] + "\"" +
+                ",\"l\":" + String(totalLeituras) +
+                ",\"perto\":" + (perto ? "true" : "false") +
+                ",\"estado\":\"" + NOME_CLASSE[estadoAtual] + "\"" +
+                ",\"modelo\":\"" + NOME_CLASSE[ultimaClasse] + "\"" +
                 ",\"conf\":" + String(confiancaAtual, 2) +
                 ",\"ms\":" + String(tempoInferenciaMs) +
                 ",\"n\":" + String(totalInferencias) +
-                ",\"manobra\":" + (manobraAtiva() ? "true" : "false") +
+                ",\"freio\":" + (freioAtivo() ? "true" : "false") +
                 ",\"probs\":{";
   for (int i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++) {
     if (i) json += ",";
@@ -562,45 +554,31 @@ void loop() {
   server.handleClient();
 
   // Sensor -> janela -> modelo (roda mesmo sem controle conectado)
-  if (atualizaSensorDistancia() && leiturasNaJanela == JANELA) {
-    if (++leiturasDesdeInferencia >= INFERENCIA_PASSO) {
-      leiturasDesdeInferencia = 0;
-      rodaInferencia();
-    }
-  }
+  if (atualizaSensorDistancia()) atualizaTinyML();
 
-  atualizaManobra();
   atualizaRampa();
 
   // Busca dados novos do controle (precisa ser chamado sempre no loop)
   BP32.update();
   bool controleOk = meuControle != nullptr && meuControle->isConnected() && meuControle->isGamepad();
 
-  // Leitura crua dos eixos (-511 a 512).
-  // axisY: empurrar pra CIMA da valor NEGATIVO, entao invertemos o sinal.
-  int frente = controleOk ? -meuControle->axisY() : 0;   // stick esquerdo, eixo Y
-  int giro   = controleOk ?  meuControle->axisRX() : 0;  // stick direito, eixo X
-  if (abs(frente) < ZONA_MORTA) frente = 0;
-  if (abs(giro)   < ZONA_MORTA) giro   = 0;
-  bool pilotando = (frente != 0 || giro != 0);
-  if (pilotando) ultimoComando = millis();
-
-  // Manobra do modelo em curso: o piloto sempre tem prioridade e pode interromper
-  if (manobraAtiva()) {
-    if (!pilotando) return;
-    encerraManobra();
-  }
-
   if (!controleOk) {
     alvoA = 0; alvoB = 0;
     return;
   }
 
+  // Leitura crua dos eixos (-511 a 512).
+  // axisY: empurrar pra CIMA da valor NEGATIVO, entao invertemos o sinal.
+  int frente = -meuControle->axisY();   // stick esquerdo, eixo Y
+  int giro   =  meuControle->axisRX();  // stick direito, eixo X
+  if (abs(frente) < ZONA_MORTA) frente = 0;
+  if (abs(giro)   < ZONA_MORTA) giro   = 0;
+
   int fr = map(frente, -511, 512, -velMax, velMax);
   int gr = map(giro,   -511, 512, -velMax, velMax);
 
-  // TinyML: obstaculo parado ou algo vindo na direcao do robo -> avanco limitado a 50%
-  if ((classeAtual == C_PARADO || classeAtual == C_APROXIMANDO) && fr > 0) fr /= 2;
+  // TinyML: aproximacao rapida perto de algo -> freio (so o avanco; re e giro continuam)
+  if (freioAtivo() && fr > 0) fr = 0;
 
   // Freio de seguranca: se tem objeto perto, bloqueia so o avanco (re e giro continuam liberados)
   bool objetoPerto = (distanciaCm < DISTANCIA_MIN_CM);

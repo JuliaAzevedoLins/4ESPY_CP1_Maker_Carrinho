@@ -1,9 +1,13 @@
 """
 CP2 | TinyML -- monitor das inferencias do carrinho pela rede.
 
-Le o painel do ESP32 (http://<ip>/get) a cada 300 ms, mostra a classe no
+Le o painel do ESP32 (http://<ip>/get) a cada 150 ms, mostra o estado no
 terminal e grava tudo em CSV -- registro de que o modelo esta rodando no
 microcontrolador, sem precisar de cabo serial.
+
+Firmware v3: uma linha por leitura nova do sensor, com a distancia, se ha
+algo perto (< 1 m), o estado (longe / seguro / inseguro), a saida do modelo,
+as probabilidades e se o freio esta ativo.
 
 Uso:
     python monitorar.py                              # carrinho-esp32.local
@@ -19,8 +23,6 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-CLASSES = ["vazio", "parado", "aproximando", "aceno"]
-
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Monitor das inferencias TinyML do carrinho")
@@ -35,11 +37,10 @@ def main() -> None:
     args.saida.parent.mkdir(parents=True, exist_ok=True)
     print(f"Lendo {url} -> {args.saida}  (Ctrl+C encerra)\n")
 
-    ultima_n = None
+    classes = None
+    ultima = None
     with args.saida.open("w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["hora", "inferencias", "distancia_cm", "classe", "confianca",
-                    *[f"p_{c}" for c in CLASSES], "tempo_inferencia_ms", "manobra"])
         try:
             while True:
                 try:
@@ -49,16 +50,21 @@ def main() -> None:
                     print(f"  sem resposta do carrinho ({e})")
                     time.sleep(1)
                     continue
-                if d.get("n") != ultima_n:      # so grava quando houve inferencia nova
-                    ultima_n = d.get("n")
-                    probs = d.get("probs", {})
-                    w.writerow([datetime.now().strftime("%H:%M:%S.%f")[:-3], d.get("n"), d.get("dist"),
-                                d.get("classe"), d.get("conf"), *[probs.get(c) for c in CLASSES],
-                                d.get("ms"), d.get("manobra")])
+                probs = d.get("probs", {})
+                if classes is None:                 # rotulos vem do proprio modelo
+                    classes = sorted(probs)
+                    w.writerow(["hora", "leituras", "inferencias", "distancia_cm", "perto", "estado", "modelo",
+                                "confianca", *[f"p_{c}" for c in classes], "tempo_inferencia_ms", "freio"])
+                chave = (d.get("l"), d.get("n"))
+                if chave != ultima:                 # so grava quando ha leitura ou inferencia nova
+                    ultima = chave
+                    w.writerow([datetime.now().strftime("%H:%M:%S.%f")[:-3], d.get("l"), d.get("n"), d.get("dist"),
+                                d.get("perto"), d.get("estado"), d.get("modelo"), d.get("conf"),
+                                *[probs.get(c) for c in classes], d.get("ms"), d.get("freio")])
                     f.flush()
-                    barras = "  ".join(f"{c} {probs.get(c, 0):4.2f}" for c in CLASSES)
-                    print(f"#{d.get('n'):>6}  {d.get('dist'):6.1f} cm  {d.get('classe'):>11}  | {barras}"
-                          f"{'  [manobra]' if d.get('manobra') else ''}")
+                    barras = "  ".join(f"{c} {probs.get(c, 0):4.2f}" for c in classes)
+                    print(f"#{d.get('n'):>6}  {d.get('dist'):6.1f} cm  {d.get('estado'):>8}  | {barras}"
+                          f"{'  [FREIO]' if d.get('freio') else ''}")
                 time.sleep(args.intervalo)
         except KeyboardInterrupt:
             print(f"\nLog salvo em {args.saida}")
