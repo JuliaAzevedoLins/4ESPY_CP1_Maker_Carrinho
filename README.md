@@ -28,6 +28,22 @@ Desenvolver um carrinho robótico funcional que integre projeto mecânico, fabri
 | **Calibração pelo celular** | O ESP32 serve uma página web com sliders que compensam a diferença de rotação entre os motores. Valores salvos na memória interna |
 | **Atualização OTA** | Depois da primeira gravação por cabo, o firmware é atualizado pela rede Wi-Fi — sem abrir o corpo impresso |
 
+## CP2 — TinyML
+
+No CP2 o mesmo carrinho passou a rodar um **modelo de Machine Learning treinado no Edge Impulse e embarcado no ESP32**. O modelo classifica janelas de 1,8 s de leituras do HC-SR04 em `vazio`, `parado`, `aproximando` e `aceno`, e a classe muda o comportamento do robô:
+- a luz do controle muda de cor conforme a classe;
+- diante de um obstáculo o avanço é limitado;
+- WALL-E "se assusta" (dá ré) quando algo se aproxima;
+- WALL-E "cumprimenta" (balança) diante de um aceno.
+
+📁 Pasta do CP2: [`CP2-TinyML/`](<CP2-TinyML/README.md>) · 📄 Documentação: seções 29 a 33 da [documentação técnica](Documentacao.md)
+
+| | |
+|---|---|
+| Dataset | **Simulado** (gerado por script, não medido com o sensor): 200 CSVs, 168 amostras únicas |
+| Modelo | Raw Data + rede densa 20/10, int8. Validação **91,2%**, teste **85,0%** |
+| No ESP32 | 1 ms por inferência, 1,4 KB de RAM (estimativa); firmware em 98% da memória de programa |
+
 ## O carrinho finalizado
 
 <img src="imagens/robo-final/2-vista-tres-quartos.jpeg" alt="Carrinho robótico WALL-E finalizado" width="420">
@@ -68,9 +84,16 @@ Instruções completas (calibração, gravação do firmware e solução de prob
 
 ```
 ├── README.md                     # este arquivo
-├── Documentacao.md               # documentação técnica completa (28 seções)
+├── Documentacao.md               # documentação técnica completa (CP1: seções 1–28, CP2: 29–33)
 │
-├── Códigos/                      # firmware
+├── CP2-TinyML/                   # ⭐ CP2: dataset, Edge Impulse e firmware com o modelo
+│   ├── dataset/                       # CSVs (simulados) e descrição
+│   ├── simulacao/                     # gerador do dataset
+│   ├── coleta/                        # firmware e script de coleta com o sensor
+│   ├── edge-impulse/                  # prints do processo e biblioteca exportada
+│   └── firmware/PS5_ESP32_TinyML/     # firmware do CP1 + inferência TinyML
+│
+├── Códigos/                      # firmware do CP1
 │   ├── PS5_ESP32_Bluepad32.ino        # ⭐ firmware oficial do robô (ESP32)
 │   ├── secrets.h.example              # modelo das credenciais de Wi-Fi
 │   ├── README.md                      # setup, compilação e uso
@@ -113,6 +136,7 @@ A [documentação técnica completa](Documentacao.md) é **cumulativa** e regist
 | **26** | **Evolução e decisões de projeto** |
 | **27** | **Instruções de uso** |
 | **28** | **Evidências finais** |
+| **29 – 33** | **CP2 — TinyML**: dataset, Edge Impulse, integração no ESP32, testes e limitações |
 
 Os artefatos de planejamento (MVP, MoSCoW, backlog, dependências, kanban e custos) estão na pasta [`Organização/`](<Organização/README.md>).
 
@@ -129,3 +153,12 @@ Os artefatos de planejamento (MVP, MoSCoW, backlog, dependências, kanban e cust
 - [x] Integração final: mecânica + eletrônica + firmware
 - [x] Acabamento: pintura de desgaste, faixa preta e adesivos
 - [x] Fotos do robô finalizado e vídeos da demonstração
+
+**CP2 — TinyML**
+
+- [x] Firmware e script de coleta do HC-SR04
+- [x] Dataset (simulado) em CSV, 4 classes
+- [x] Treino, teste e exportação no Edge Impulse
+- [x] Firmware com inferência embarcada e ações no carrinho (compilado)
+- [ ] Gravação e teste no carrinho
+- [ ] Vídeo da demonstração

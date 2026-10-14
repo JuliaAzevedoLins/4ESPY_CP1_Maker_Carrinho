@@ -25,7 +25,7 @@
 
 O projeto **Carrinho Robótico WALL-E** consiste em um carrinho robótico físico e funcional, desenvolvido na disciplina de Project-based Maker Lab. O robô é construído sobre um corpo impresso em 3D inspirado no personagem WALL-E (Pixar), movimenta-se por meio de duas rodas acionadas por motores DC independentes, é comandado à distância por um controle **PS5 DualSense** via Bluetooth e detecta obstáculos com um sensor ultrassônico **HC-SR04**, que bloqueia automaticamente o avanço diante de uma colisão iminente.
 
-O projeto atravessou três etapas: concepção e ficha de requisitos (seções 1 a 19), montagem e testes de bancada (seções 20 e 21) e integração da versão final entregue (seções 23 a 28).
+O projeto atravessou três etapas no CP1: concepção e ficha de requisitos (seções 1 a 19), montagem e testes de bancada (seções 20 e 21) e integração da versão final entregue (seções 23 a 28). No **CP2** (seções 29 a 33), o mesmo robô passou a rodar um modelo de **TinyML** treinado no Edge Impulse, cuja classificação muda o comportamento do carrinho.
 
 ---
 
@@ -37,9 +37,10 @@ Este documento é **cumulativo**: ele preserva o registro de cada etapa, inclusi
 |---|---|---|
 | 1 a 19 | Concepção inicial, ficha de requisitos, croqui | Atualizadas para a versão final; onde a concepção foi superada, o texto indica o que mudou e por quê |
 | 20 e 21 | Montagem de bancada e testes com Arduino Uno | **Registro histórico** — não descrevem o robô entregue |
-| 23 a 28 | Versão final: modelagem 3D, eletrônica, firmware, testes, uso e evidências | **Descrevem o robô entregue** |
+| 23 a 28 | Versão final: modelagem 3D, eletrônica, firmware, testes, uso e evidências | **Descrevem o robô entregue no CP1** |
+| 29 a 33 | CP2: dataset, Edge Impulse, modelo embarcado no ESP32 e ações no carrinho | **Evolução do CP2** — o firmware do CP1 continua preservado em `Códigos/` |
 
-Em caso de divergência, **valem as seções 23 a 28**.
+Em caso de divergência sobre o CP1, **valem as seções 23 a 28**. A pasta do CP2 é [`CP2-TinyML/`](<CP2-TinyML/README.md>).
 
 ---
 
@@ -1257,7 +1258,272 @@ A demonstração específica do **sensor de aproximação** está no vídeo da e
 
 ---
 
-**Documento:** Documentação Técnica — CP1
+## 29. CP2 — TinyML Aplicado ao Carrinho
+
+### 29.1 Objetivo
+
+O CP2 evolui o robô do CP1 sem construir outro. O mesmo HC-SR04 e o mesmo ESP32 passam a executar um modelo de Machine Learning treinado no **Edge Impulse**, e a classificação produzida pelo modelo muda o comportamento do carrinho.
+
+```
+HC-SR04 → janela de 1,8 s → CSV → Edge Impulse → treino → biblioteca Arduino → ESP32 → inferência → ação no carrinho
+```
+
+### 29.2 Por que um modelo, e não mais uma regra
+
+O freio do CP1 é uma regra sobre **uma leitura isolada** (`distância < 20 cm`). Uma leitura isolada não diz se o objeto à frente está parado, se está vindo na direção do robô ou se é uma mão acenando. Essa diferença só aparece na **forma** da variação da distância ao longo do tempo. O modelo recebe 30 leituras consecutivas (1,8 s) e aprende a reconhecer esses padrões.
+
+### 29.3 Classes e ações no carrinho
+
+| Classe | O que o sensor vê | Ação no carrinho |
+|---|---|---|
+| `vazio` | Nada à frente até ~2 m | Luz do DualSense **verde**; velocidade normal |
+| `parado` | Objeto fixo à frente (parede, caixa) | Luz **amarela**; avanço limitado a **50%** |
+| `aproximando` | Algo vindo na direção do robô | Luz **vermelha**; avanço limitado a 50%. Com o robô parado, WALL-E **"se assusta"**: dá ré e o controle vibra |
+| `aceno` | Mão acenando na frente do sensor | Luz **azul**. Com o robô parado, WALL-E **"cumprimenta"**: balança para a esquerda e para a direita |
+
+### 29.4 Onde está cada parte
+
+| Parte | Caminho |
+|---|---|
+| Visão geral e passo a passo | [`CP2-TinyML/README.md`](<CP2-TinyML/README.md>) |
+| Dataset (CSV) e descrição | [`CP2-TinyML/dataset/`](<CP2-TinyML/dataset/README.md>) |
+| Gerador do dataset | [`CP2-TinyML/simulacao/gerar_dataset.py`](<CP2-TinyML/simulacao/gerar_dataset.py>) |
+| Ferramentas de coleta com o sensor | [`CP2-TinyML/coleta/`](<CP2-TinyML/coleta>) |
+| Prints do Edge Impulse | [`CP2-TinyML/edge-impulse/prints/`](<CP2-TinyML/edge-impulse/prints>) |
+| Biblioteca exportada | [`CP2-TinyML/edge-impulse/biblioteca/`](<CP2-TinyML/edge-impulse/biblioteca>) |
+| Firmware com o modelo embarcado | [`CP2-TinyML/firmware/PS5_ESP32_TinyML/`](<CP2-TinyML/firmware/PS5_ESP32_TinyML/PS5_ESP32_TinyML.ino>) |
+
+---
+
+## 30. Dataset
+
+> ⚠️ **O dataset do CP2 é simulado.** Por decisão da equipe, as amostras foram **geradas por script** ([`CP2-TinyML/simulacao/gerar_dataset.py`](<CP2-TinyML/simulacao/gerar_dataset.py>)) e **não medidas** com o sensor do carrinho. O formato é idêntico ao que o firmware de coleta produz ([`CP2-TinyML/coleta/`](<CP2-TinyML/coleta>), também entregue). Por isso, uma coleta real substitui os arquivos sem mudar nada no restante do pipeline.
+
+### 30.1 Sensor e dados
+
+| Item | Valor |
+|---|---|
+| Sensor | HC-SR04 frontal do carrinho, alimentado em 3,3 V (seção 24.2), aqui simulado |
+| Grandeza | Distância até o obstáculo à frente, em cm |
+| Período | 60 ms (16,67 Hz), o mesmo do firmware |
+| Amostra | 3 s = 50 leituras |
+| Sem eco | Gravado como 200 cm, o mesmo tratamento do firmware |
+| Formato | CSV `timestamp,distancia`: o tempo em ms e a distância em cm |
+
+### 30.2 Como os dados foram gerados
+
+O gerador simula o HC-SR04 da montagem. Cada leitura recebe:
+
+- **ruído** que cresce com a distância (desvio de `0,3 + 0,01 × d` cm);
+- **falhas de eco**, que viram 200 cm. São mais frequentes longe do sensor e em superfícies macias ou inclinadas, como mão e roupa;
+- **ecos espúrios** ocasionais (multicaminho).
+
+Em cada amostra são sorteados distância, objeto, fundo, velocidade e ritmo. A semente fixa (2026) torna o dataset reproduzível. O detalhamento por classe está em [`CP2-TinyML/dataset/README.md`](<CP2-TinyML/dataset/README.md>).
+
+### 30.3 Arquivos e quantidade
+
+Foram gerados **200 CSVs**, 50 por classe, em `CP2-TinyML/dataset/<classe>.sim<NNN>.csv`. O Edge Impulse usa o texto antes do primeiro ponto como rótulo.
+
+O Edge Impulse **recusou 32 amostras de `vazio`** por serem cópias exatas de outras: com nada à frente, todas as 50 leituras valem 200 cm e o arquivo fica idêntico. Ficaram **168 amostras únicas (8 min 24 s de sinal)**:
+
+| Classe | Treino | Teste | Janelas de treino (1,8 s) |
+|---|---|---|---|
+| `aceno` | 39 | 11 | 195 |
+| `aproximando` | 41 | 9 | 205 |
+| `parado` | 40 | 10 | 200 |
+| `vazio` | 16 | 2 | 80 |
+| **Total** | **136** | **32** | **680** |
+
+---
+
+## 31. Projeto no Edge Impulse
+
+Projeto **`carrinho_walle_tinyml`**, com o alvo configurado como **Espressif ESP-EYE (ESP32 240 MHz)**, o mesmo chip do carrinho, para que as estimativas de tempo e memória correspondam ao hardware.
+
+### 31.1 Importação e divisão dos dados
+
+Os CSVs foram enviados em *Data acquisition → Upload data* com **Automatically split between training and test** e **Infer from filename**. A divisão resultante foi **81% treino / 19% teste**.
+
+### 31.2 Configuração do impulse
+
+| Bloco | Configuração |
+|---|---|
+| Time series data | Eixo `distancia`, **janela de 1800 ms**, **passo de 300 ms**, 16,67 Hz, zero-pad |
+| Processamento | **Raw Data**, escala 0,01 (cm → faixa de 0 a 2) |
+| Aprendizado | **Classification** (rede neural Keras) |
+| Saída | 4 classes: `aceno`, `aproximando`, `parado`, `vazio` |
+
+Com janela de 1,8 s e passo de 0,3 s, cada amostra de 3 s gera 5 janelas de treino. Isso aumenta o dataset e ensina o modelo a reconhecer o padrão em qualquer ponto do gesto.
+
+### 31.3 Processamento: Raw Data
+
+Foi escolhido o bloco **Raw Data**, que entrega ao modelo as 30 leituras **em ordem**. Os blocos Flatten e Spectral Analysis resumem a janela em estatísticas como média, desvio e potência espectral, e com isso perdem a **direção** da variação. Sem a direção, uma distância que diminui (`aproximando`) fica parecida com uma que aumenta.
+
+No *Feature explorer*, `vazio` e `parado` formam grupos bem separados. Já `aceno` e `aproximando` se sobrepõem na projeção 2D: são as duas classes com maior variação dentro da janela.
+
+### 31.4 Modelo
+
+| Item | Valor |
+|---|---|
+| Arquitetura | Entrada (30) → Densa (20) → Densa (10) → Saída (4, softmax) |
+| Ciclos de treino | 100 |
+| Taxa de aprendizado | 0,005 |
+| Versão embarcada | Quantizada **int8** |
+
+### 31.5 Resultado do treino (conjunto de validação)
+
+**Acurácia 91,2%**, perda 0,29, AUC 0,98 e precisão, recall e F1 ponderados de 0,91. A versão int8 teve o mesmo resultado da float32.
+
+| Real \ Previsto | aceno | aproximando | parado | vazio |
+|---|---|---|---|---|
+| **aceno** | **93,1%** | 6,9% | 0% | 0% |
+| **aproximando** | 1,9% | **88,9%** | 9,3% | 0% |
+| **parado** | 5,3% | 5,3% | **89,5%** | 0% |
+| **vazio** | 0% | 0% | 0% | **100%** |
+| F1 | 0,92 | 0,91 | 0,88 | 1,00 |
+
+A principal confusão é `aproximando` → `parado`. No fim de uma aproximação o objeto para, e a última janela parece de fato um objeto parado.
+
+### 31.6 Teste do modelo (dados que não entraram no treino)
+
+***Model testing → Classify all*** nas 32 amostras de teste: **acurácia 85,0%**, AUC 0,98, precisão 0,90, recall 0,89 e F1 0,88.
+
+| Real \ Previsto | aceno | aproximando | parado | vazio | incerto |
+|---|---|---|---|---|---|
+| **aceno** | **67,3%** | 7,3% | 10,9% | 0% | 14,5% |
+| **aproximando** | 0% | **97,8%** | 0% | 2,2% | 0% |
+| **parado** | 2% | 2% | **90%** | 0% | 6% |
+| **vazio** | 0% | 0% | 0% | **100%** | 0% |
+| F1 | 0,80 | 0,94 | 0,89 | 0,95 | |
+
+- **`aceno` é a classe mais fraca.** Quando a mão está a uma distância parecida com a do fundo, ou o aceno é lento, a janela de 1,8 s capta poucas passagens da mão e se parece com um objeto parado. "Incerto" é quando nenhuma classe passa de 60% de confiança no Edge Impulse.
+- **O firmware é mais exigente que o Edge Impulse.** Ele só aceita uma classe com **80% de confiança em duas inferências seguidas** (seção 32.3). Na dúvida, o robô não faz nada, que é o comportamento mais seguro.
+- **O teste também usa dados simulados.** Ele mede o quanto o modelo aprendeu a simulação, e não o desempenho com o sensor real (seção 33.3).
+
+### 31.7 Deploy
+
+*Deployment → Arduino library*, quantizado **int8**, motor TensorFlow Lite Micro. Estimativa do Edge Impulse para o ESP32 a 240 MHz:
+
+| Versão | Latência | RAM | Flash |
+|---|---|---|---|
+| **int8 (embarcada)** | **1 ms** | **1,4 KB** | **14,9 KB** |
+| float32 | 3 ms | 1,5 KB | 14,0 KB |
+
+A biblioteca está em [`CP2-TinyML/edge-impulse/biblioteca/`](<CP2-TinyML/edge-impulse/biblioteca>).
+
+### 31.8 Prints do processo
+
+| # | Etapa | Print |
+|---|---|---|
+| 1 | Dataset importado e amostra de `aproximando` | [`01-dataset-amostra-aproximando.jpg`](<CP2-TinyML/edge-impulse/prints/01-dataset-amostra-aproximando.jpg>) |
+| 2 | Impulse (janela, passo, blocos) | [`02-impulse-design.jpg`](<CP2-TinyML/edge-impulse/prints/02-impulse-design.jpg>) |
+| 3 | Features geradas e Feature explorer | [`03-features-feature-explorer.jpg`](<CP2-TinyML/edge-impulse/prints/03-features-feature-explorer.jpg>) |
+| 4 | Treino: acurácia e matriz de confusão | [`04-treino-acuracia-matriz-confusao.jpg`](<CP2-TinyML/edge-impulse/prints/04-treino-acuracia-matriz-confusao.jpg>) |
+| 5 | Arquitetura da rede e métricas | [`05-arquitetura-metricas.jpg`](<CP2-TinyML/edge-impulse/prints/05-arquitetura-metricas.jpg>) |
+| 6 | Teste do modelo | [`06-teste-do-modelo.jpg`](<CP2-TinyML/edge-impulse/prints/06-teste-do-modelo.jpg>) |
+| 7 | Deploy e desempenho estimado no ESP32 | [`07-deployment-desempenho-esp32.jpg`](<CP2-TinyML/edge-impulse/prints/07-deployment-desempenho-esp32.jpg>) |
+
+---
+
+## 32. Integração com o ESP32
+
+O firmware do CP2 ([`CP2-TinyML/firmware/PS5_ESP32_TinyML/`](<CP2-TinyML/firmware/PS5_ESP32_TinyML/PS5_ESP32_TinyML.ino>)) é o firmware do CP1 acrescido do modelo. Controle PS5, rampa, zona morta, freio de 20 cm, calibração web e OTA continuam iguais.
+
+### 32.1 Biblioteca e compilação
+
+A biblioteca exportada é instalada pelo Arduino IDE (*Add .ZIP Library*) e incluída com `#include <carrinho_walle_tinyml_inferencing.h>`. Placa `esp32_bluepad32 3.10.x > ESP32 Dev Module`, partição padrão com OTA e *Compiler warnings* em *Default*. O firmware completo ocupa **98% da memória de programa**; o do CP1 ocupava 90%.
+
+### 32.2 Do sensor ao modelo
+
+O HC-SR04 é lido no ritmo do dataset. O período vem da própria biblioteca (`EI_CLASSIFIER_INTERVAL_MS` = 60 ms), então firmware e modelo não podem divergir. As últimas 30 leituras ficam num **buffer circular**, e a cada 5 leituras novas (**300 ms**) a janela é copiada em ordem cronológica e classificada:
+
+```cpp
+for (int i = 0; i < JANELA; i++) entrada[i] = janela[(posJanela + i) % JANELA];
+
+signal_t sinal;
+numpy::signal_from_buffer(entrada, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE, &sinal);
+ei_impulse_result_t resultado = {};
+run_classifier(&sinal, &resultado, false);
+```
+
+A leitura do sensor usa o mesmo tratamento do firmware de coleta: sem eco ou acima de 200 cm → 200 cm.
+
+### 32.3 Da classificação à ação
+
+1. **Confirmação.** A classe só é aceita com **confiança ≥ 0,80** em **duas inferências seguidas** (600 ms). Abaixo disso, o robô mantém o comportamento atual.
+2. **Ações contínuas**, valem também com o robô andando:
+   - a cor da luz do controle segue a classe;
+   - com `parado` ou `aproximando`, o avanço pelo stick é limitado a 50%.
+3. **Manobras**, só com o robô parado: sticks soltos há 800 ms e motores em repouso.
+
+   | Classe | Manobra | Passos |
+   |---|---|---|
+   | `aproximando` | Susto | Ré a 190/255 por 600 ms e vibração no controle |
+   | `aceno` | Cumprimento | Giro alternado a 170/255, 4 × 300 ms |
+
+   Depois de cada manobra há uma **pausa de 2 s**, mais que a janela do modelo, para que o movimento do próprio robô não dispare outra ação. Mexer no stick **interrompe** a manobra: o piloto sempre tem prioridade.
+4. **Freio de segurança do CP1**, mantido como camada determinística: a menos de 20 cm, o avanço é bloqueado independentemente do modelo.
+
+### 32.4 Saídas visíveis da inferência
+
+| Onde | O que mostra |
+|---|---|
+| Barra de luz do DualSense | Cor da classe atual |
+| Painel web (`http://<ip-do-esp32>/`) | Classe, confiança, probabilidade de cada classe, tempo de inferência e número de inferências, atualizados a cada 300 ms |
+| Serial Monitor (115200) | Uma linha por inferência, no formato `TinyML \| dist <cm> \| aceno <p> aproximando <p> parado <p> vazio <p> \| <ms> ms -> <classe>` |
+
+### 32.5 Outras mudanças em relação ao firmware do CP1
+
+- A calibração dos motores passou a ser carregada **antes** do Wi-Fi. No CP1 ela só era lida com a rede conectada, e sem Wi-Fi o robô voltava a puxar para um lado.
+- A distância passou a ser `float` e o "sem leitura" virou 200 cm, em vez de −1, para ser o mesmo valor que o modelo recebe.
+
+---
+
+## 33. Testes, Limitações e Próximos Passos
+
+### 33.1 O que já foi verificado
+
+| Verificação | Resultado |
+|---|---|
+| Firmware de coleta compila para o ESP32 (esp32_bluepad32 3.10.2) | ✅ |
+| Script de coleta: leitura da serial, checagem do ritmo de 60 ms e gravação do CSV, testados com porta simulada | ✅ |
+| Biblioteca exportada: 30 leituras a cada 60 ms, 4 classes, rótulos iguais aos do firmware | ✅ |
+| Firmware do CP2 compila com a biblioteca oficial | ✅ 98% da memória de programa |
+| Treino e teste no Edge Impulse | ✅ Validação 91,2%, teste 85,0% |
+
+### 33.2 Pendente: execução no carrinho
+
+| # | Teste | Situação |
+|---|---|---|
+| T11 | Leitura do HC-SR04 a cada 60 ms (Serial Monitor) | ⏳ A executar |
+| T12 | Inferência no ESP32: linhas `TinyML` no Serial e classe no painel web | ⏳ A executar |
+| T13 | `vazio` e `parado` mudam a luz do controle; `parado` limita o avanço | ⏳ A executar |
+| T14 | `aproximando` com o robô parado: ré e vibração | ⏳ A executar |
+| T15 | `aceno` com o robô parado: balanço | ⏳ A executar |
+| T16 | Freio de 20 cm continua ativo com o modelo rodando | ⏳ A executar |
+
+### 33.3 Limitações conhecidas
+
+- **Dados simulados.** O modelo aprendeu o comportamento *simulado* do HC-SR04. No sensor real, ruído, ângulo de reflexão e superfícies podem diferir da simulação, e o desempenho no carrinho pode ser menor que os 85% do teste. O caminho para corrigir já está pronto: coletar com [`CP2-TinyML/coleta/`](<CP2-TinyML/coleta>), enviar ao mesmo projeto, retreinar e exportar. O firmware não muda.
+- **`aceno` é a classe com menor acurácia** (67,3% no teste). As melhorias possíveis são mais amostras de aceno lento ou com parede ao fundo, ou uma janela maior.
+- **`vazio` tem poucas amostras únicas** (18), porque "nada à frente" gera sempre a mesma sequência. Isso não prejudicou a classe (100%), mas o dataset fica desbalanceado.
+- **As manobras só acontecem com o robô parado.** Com o robô andando para a frente, a distância até uma parede diminui do mesmo jeito que quando algo se aproxima, e o modelo não distingue os dois casos só pelo sensor.
+
+### 33.4 Evolução CP1 → CP2
+
+| | CP1 | CP2 |
+|---|---|---|
+| Sensor | HC-SR04, leitura a cada 60 ms | O mesmo, em ritmo fixo e janela deslizante de 1,8 s |
+| Decisão | Regra fixa: avanço bloqueado a menos de 20 cm | Regra mantida **+** modelo TinyML com 4 classes |
+| Saídas visíveis | Movimento | Movimento, luz e vibração do DualSense e painel web com probabilidades |
+| Movimento sem comando | Nunca | Manobras curtas disparadas pelo modelo, só com o robô parado |
+| Firmware | `Códigos/PS5_ESP32_Bluepad32.ino` | `CP2-TinyML/firmware/PS5_ESP32_TinyML/` |
+
+A evolução está registrada nos commits com prefixo `CP2 |`, na ordem em que o trabalho foi feito: ferramentas de coleta → firmware com inferência → README → dataset → Edge Impulse → documentação.
+
+---
+
+**Documento:** Documentação Técnica — CP1 e CP2
 **Projeto:** Carrinho Robótico WALL-E
 **Turma:** 4ESPY
-**Última alteração em:** 16/09/2026
+**Última alteração em:** 14/10/2026
