@@ -9,32 +9,38 @@
 | Período | 60 ms (16,67 Hz), o mesmo do firmware |
 | Amostra | 3 s = 50 leituras |
 | Sem eco | Gravado como 200 cm, o mesmo tratamento do firmware |
-| Quantidade (v2) | 80 amostras por classe, **320 no total** (16 min de sinal) |
+| Quantidade (v3) | 120 amostras por classe, **240 no total** (12 min de sinal) |
 | Nome do arquivo | `<classe>.sim<NNN>.csv`: o Edge Impulse usa o texto antes do primeiro ponto como rótulo |
 
-## Classes (v2)
+## Classes (v3)
 
-| Classe | Cenário simulado | Variações sorteadas por amostra |
+O modelo responde a uma pergunta só: **a distância está diminuindo rápido demais?** O firmware só consulta o modelo quando há algo a menos de **50 cm**. Por isso toda amostra termina com o obstáculo perto, e o caso "nada à frente" não entra no dataset.
+
+| Classe | Cenários simulados | Variações sorteadas por amostra |
 |---|---|---|
-| `vazio` | Nada à frente do sensor | Ambiente aberto (60%) ou parede distante, de 140 a 260 cm, no limite do alcance |
-| `parado` | Objeto fixo à frente | Distância de 5 a 90 cm; superfície (parede, caixa, mão, roupa); 30% com leve balanço, como uma pessoa parada |
-| `aproximando` | Algo vindo na direção do robô | **Metade lenta (4 a 15 cm/s), metade rápida (15 a 60 cm/s)**; fim de 5 a 30 cm; 20% entrando no alcance (a leitura aparece perto de 200 cm e desce suavemente) |
-| `aceno` | Mão passando na frente do sensor | Mão de **8 a 70 cm**; fundo aberto ou parede atrás da mão; período de 0,3 a 1 s; tempo da mão no feixe; leituras ambíguas na borda do feixe |
+| `seguro` | Obstáculo parado (28%), aproximação lenta (34%), afastando/ré (14%), carrinho girando (14%), mão passando (10%) | Aproximação de **1,5 a 12 cm/s**; ré de 5 a 50 cm/s; giro com 2 a 4 superfícies; mão de 8 a 45 cm |
+| `inseguro` | Aproximação rápida: o carrinho indo rápido contra um obstáculo, ou algo vindo rápido contra ele | **25 a 90 cm/s**; fim de 5 a 35 cm; às vezes sai do repouso no meio da amostra ou entra no alcance já vindo rápido |
+
+Entre 12 e 25 cm/s fica a fronteira e o modelo decide, em torno de 20 cm/s. A janela de 1,8 s inclui leituras de antes do obstáculo chegar aos 50 cm. Por isso, quando o carrinho entra na zona, o modelo já tem o histórico da aproximação.
 
 ## Modelo do sensor
 
 Cada leitura passa por:
 
 - **Ruído gaussiano** com desvio de `0,5 + 0,008 × d` cm, cerca de 0,9 cm a 50 cm;
-- **Falha de eco** (vira 200 cm) com probabilidade `(0,8% + 0,02% × d) × fator da superfície`, cerca de 2% a 50 cm numa parede. O fator vai de 1 (parede) a 2 (mão e roupa), e chega a 8 no ambiente aberto;
+- **Falha de eco** (vira 200 cm) com probabilidade `(0,8% + 0,02% × d) × fator da superfície`, cerca de 2% a 50 cm numa parede. O fator vai de 1 (parede) a 2 (mão e roupa);
+- **Vibração** em 60% das amostras, simulando o carrinho andando: +0,3 a 0,8 cm de ruído e falhas × 1,5;
 - **Eco espúrio** (multicaminho) em 0,3% das leituras: um valor aleatório entre 5 e 200 cm.
+
+Os valores de ruído e de falha de eco vêm do log do primeiro teste no carrinho.
 
 ## Versões
 
-| Versão | O que mudou | Por quê |
-|---|---|---|
-| v1 (commit `c7cbf68`) | 50 por classe; aproximações só rápidas; falhas de eco de 1% a 17% | Primeira versão do pipeline |
-| **v2** | 80 por classe; aproximações lentas; ruído e falhas recalibrados; entrada suave no alcance; mão até 70 cm | No primeiro teste no carrinho, o log ([`../evidencias/inferencias-testes-no-carrinho.csv`](../evidencias/inferencias-testes-no-carrinho.csv)) mostrou o aceno confundido com aproximação e a aproximação lenta classificada como "parado". O mesmo log mediu o ruído real (cerca de 0,9 cm) e as falhas de eco isoladas (cerca de 2%) |
+| Versão | Classes | O que mudou | Por quê |
+|---|---|---|---|
+| v1 (commit `c7cbf68`) | vazio, parado, aproximando, aceno | 50 por classe; aproximações só rápidas; falhas de eco de 1% a 17% | Primeira versão do pipeline |
+| v2 (commit `42be2e3`) | vazio, parado, aproximando, aceno | 80 por classe; aproximações lentas; ruído e falhas recalibrados | No primeiro teste no carrinho ([log](../evidencias/inferencias-testes-no-carrinho.csv)), o aceno foi confundido com aproximação e a aproximação lenta virou "parado" |
+| **v3** | **seguro, inseguro** | 120 por classe; separação pela velocidade de aproximação; só situações a menos de 50 cm; vibração do carrinho andando | No teste da v2 ([log](../evidencias/inferencias-teste-v2-no-carrinho.csv)), quatro classes com fronteiras próximas (parado × aproximação lenta, aceno × aproximação) continuaram se confundindo. O grupo simplificou para uma decisão com ação clara: frear quando algo se aproxima rápido demais |
 
 Para gerar de novo:
 
