@@ -25,7 +25,7 @@ CLASSES = ["vazio", "parado", "aproximando", "aceno"]
 def main() -> None:
     ap = argparse.ArgumentParser(description="Monitor das inferencias TinyML do carrinho")
     ap.add_argument("--host", default="carrinho-esp32.local")
-    ap.add_argument("--intervalo", type=float, default=0.3, help="segundos entre leituras (padrao 0,3)")
+    ap.add_argument("--intervalo", type=float, default=0.15, help="segundos entre leituras (padrao 0,15)")
     ap.add_argument("--saida", type=Path,
                     default=Path(__file__).resolve().parent.parent / "evidencias" /
                     f"inferencias-{datetime.now():%Y%m%d-%H%M%S}.csv")
