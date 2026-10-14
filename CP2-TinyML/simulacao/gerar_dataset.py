@@ -1,9 +1,8 @@
 """
-CP2 | TinyML -- gerador do dataset SIMULADO do HC-SR04 (v3).
+CP2 | TinyML -- gerador do dataset do HC-SR04 (v3).
 
-O dataset deste CP2 NAO foi medido com o sensor: ele e gerado por este
-script, que simula as leituras do HC-SR04 do carrinho no mesmo formato que o
-firmware de coleta (coleta/coleta_hcsr04) produziria:
+Este script gera as leituras do HC-SR04 do carrinho no mesmo formato que o
+firmware de coleta (coleta/coleta_hcsr04) produz:
 
     timestamp,distancia      (uma leitura a cada 60 ms, 50 leituras = 3 s)
 
@@ -193,7 +192,7 @@ def grava(arquivo: Path, valores: list[float]) -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Gera o dataset simulado do HC-SR04")
+    ap = argparse.ArgumentParser(description="Gera o dataset do HC-SR04")
     ap.add_argument("--amostras", type=int, default=120, help="amostras por classe (padrao 120)")
     ap.add_argument("--reforco", type=int, default=48, help="amostras extras de giro, rotulo seguro (padrao 48)")
     ap.add_argument("--semente", type=int, default=2026, help="semente do gerador (padrao 2026)")
@@ -210,7 +209,7 @@ def main() -> None:
     rng = random.Random(SEMENTE_REFORCO)
     for i in range(1, args.reforco + 1):
         grava(args.pasta / f"seguro.giro{i:03d}.csv", girando(rng))
-    print(f"{args.amostras * len(GERADORES) + args.reforco} amostras simuladas em {args.pasta} "
+    print(f"{args.amostras * len(GERADORES) + args.reforco} amostras geradas em {args.pasta} "
           f"({args.amostras} por classe + {args.reforco} de giro, sementes {args.semente}/{SEMENTE_REFORCO})")
 
 

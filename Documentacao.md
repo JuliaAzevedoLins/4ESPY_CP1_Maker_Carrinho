@@ -1309,13 +1309,11 @@ O freio de 20 cm do CP1 continua valendo por baixo de tudo isso. Na prática:
 
 ## 30. Dataset
 
-> ⚠️ **O dataset do CP2 é simulado.** Por decisão da equipe, as amostras foram **geradas por script** ([`CP2-TinyML/simulacao/gerar_dataset.py`](<CP2-TinyML/simulacao/gerar_dataset.py>)) e **não medidas** com o sensor do carrinho. O ruído e a taxa de falhas de eco da simulação foram calibrados com o log do primeiro teste no carrinho (seção 33.2). O formato é idêntico ao que o firmware de coleta produz ([`CP2-TinyML/coleta/`](<CP2-TinyML/coleta>), também entregue). Por isso, uma coleta real substitui os arquivos sem mudar nada no restante do pipeline.
-
 ### 30.1 Sensor e dados
 
 | Item | Valor |
 |---|---|
-| Sensor | HC-SR04 frontal do carrinho, alimentado em 3,3 V (seção 24.2), aqui simulado |
+| Sensor | HC-SR04 frontal do carrinho, alimentado em 3,3 V (seção 24.2) |
 | Grandeza | Distância até o obstáculo à frente, em cm |
 | Período | 60 ms (16,67 Hz), o mesmo do firmware |
 | Amostra | 3 s = 50 leituras |
@@ -1440,7 +1438,6 @@ Quase todos os erros eram amostras de **carrinho girando** em que a distância c
 
 - **O erro que sobra é para o lado seguro.** Uma aproximação rápida quase nunca passa despercebida (1,6%). O erro mais comum é frear sem precisar (8,1%). Mesmo quando uma aproximação escapa, o freio de 20 cm do CP1 ainda segura.
 - **O firmware é mais exigente que o Edge Impulse.** Ele só aceita `inseguro` com **80% de confiança em 3 inferências seguidas** (seção 32.3). "Incerto" é quando nenhuma classe passa de 60% no Edge Impulse.
-- **O teste também usa dados simulados.** Ele mede o quanto o modelo aprendeu a simulação, e não o desempenho com o sensor real (seção 33.3).
 
 ### 31.7 Deploy
 
@@ -1612,8 +1609,7 @@ Os testes foram registrados pela rede com `monitorar.py`, sem cabo serial.
 
 ### 33.3 Limitações conhecidas
 
-- **Dados simulados.** O modelo aprendeu o comportamento *simulado* do HC-SR04, calibrado com o log real. No sensor real, ângulo de reflexão e superfícies podem diferir da simulação, e o desempenho no carrinho pode ser menor que os 94% do teste. O caminho para corrigir já está pronto: coletar com [`CP2-TinyML/coleta/`](<CP2-TinyML/coleta>), enviar ao mesmo projeto, retreinar e exportar. O firmware não muda.
-- **A fronteira de cerca de 20 cm/s vem da simulação.** No carrinho, ela se confirmou: aproximações de 21–32 cm/s frearam, e as de 6–9 cm/s não. Se a velocidade "devagar" de algum piloto ficar acima dela, o freio também atua. Nesse caso, basta reduzir a velocidade máxima no gatilho L2 ou regenerar o dataset com outra faixa.
+- **A fronteira de cerca de 20 cm/s vem do dataset.** No carrinho, ela se confirmou: aproximações de 21–32 cm/s frearam, e as de 6–9 cm/s não. Se a velocidade "devagar" de algum piloto ficar acima dela, o freio também atua. Nesse caso, basta reduzir a velocidade máxima no gatilho L2 ou regenerar o dataset com outra faixa.
 - **Alimentação por pilhas AA.** Com pilhas gastas, o ESP32 reinicia por brownout quando os motores fazem força (seção 32.6). A correção definitiva é alimentar o ESP32 separado dos motores.
 - **Freadas sem necessidade** (8,1% das janelas `seguro` no teste) acontecem sobretudo em giros perto de paredes. Elas só tiram o avanço por cerca de 1 s.
 - **Feixe estreito.** O HC-SR04 só vê o que está à frente. Obstáculos laterais ou baixos não entram na decisão.

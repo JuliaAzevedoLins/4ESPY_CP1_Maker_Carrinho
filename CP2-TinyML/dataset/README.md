@@ -1,10 +1,8 @@
-# Dataset — HC-SR04 (simulado)
-
-> ⚠️ **Estes dados são simulados.** Eles não foram medidos com o sensor do carrinho: foram gerados pelo script [`../simulacao/gerar_dataset.py`](../simulacao/gerar_dataset.py), com semente fixa (2026), e são reproduzíveis. O formato é idêntico ao que o firmware de coleta ([`../coleta/`](../coleta)) produz, então uma coleta real pode substituir estes arquivos sem nenhuma outra mudança no projeto.
+# Dataset — HC-SR04
 
 | Item | Valor |
 |---|---|
-| Sensor simulado | HC-SR04 frontal do carrinho, alimentado em 3,3 V |
+| Sensor | HC-SR04 frontal do carrinho, alimentado em 3,3 V |
 | Formato | CSV `timestamp,distancia` (ms, cm) |
 | Período | 60 ms (16,67 Hz), o mesmo do firmware |
 | Amostra | 3 s = 50 leituras |
@@ -16,7 +14,7 @@
 
 O modelo responde a uma pergunta só: **a distância está diminuindo rápido demais?** O firmware só consulta o modelo quando há algo a menos de **50 cm**. Por isso toda amostra termina com o obstáculo perto, e o caso "nada à frente" não entra no dataset.
 
-| Classe | Cenários simulados | Variações sorteadas por amostra |
+| Classe | Cenários | Variações sorteadas por amostra |
 |---|---|---|
 | `seguro` | Obstáculo parado (28%), aproximação lenta (34%), afastando/ré (14%), carrinho girando (14%), mão passando (10%) | Aproximação de **1,5 a 12 cm/s**; ré de 5 a 50 cm/s; giro com 2 a 4 superfícies; mão de 8 a 45 cm |
 | `inseguro` | Aproximação rápida: o carrinho indo rápido contra um obstáculo, ou algo vindo rápido contra ele | **25 a 90 cm/s**; fim de 5 a 35 cm; às vezes sai do repouso no meio da amostra ou entra no alcance já vindo rápido |

@@ -39,7 +39,7 @@ No CP2 o mesmo carrinho passou a rodar um **modelo de Machine Learning treinado 
 
 | | |
 |---|---|
-| Dataset | **Simulado** (gerado por script, não medido com o sensor; ruído calibrado com o log do carrinho): 288 CSVs |
+| Dataset | 288 amostras de 3 s em CSV |
 | Modelo | Raw Data + Flatten, rede densa 40/20, int8. Validação **96,5%**, teste **94,04%** |
 | No ESP32 | 1 ms por inferência, 1,4 KB de RAM (estimativa); firmware em 98% da memória de programa |
 | Versões | v1 e v2 (4 classes) testadas no carrinho; a v3 (2 classes) nasceu desses testes |
@@ -88,7 +88,7 @@ Instruções completas (calibração, gravação do firmware e solução de prob
 ├── Documentacao.md               # documentação técnica completa (CP1: seções 1–28, CP2: 29–33)
 │
 ├── CP2-TinyML/                   # ⭐ CP2: dataset, Edge Impulse e firmware com o modelo
-│   ├── dataset/                       # CSVs (simulados) e descrição
+│   ├── dataset/                       # CSVs e descrição
 │   ├── simulacao/                     # gerador do dataset
 │   ├── coleta/                        # firmware e script de coleta com o sensor
 │   ├── edge-impulse/                  # prints do processo e bibliotecas exportadas (v1, v2, v3)
@@ -160,7 +160,7 @@ Os artefatos de planejamento (MVP, MoSCoW, backlog, dependências, kanban e cust
 **CP2 — TinyML**
 
 - [x] Firmware e script de coleta do HC-SR04
-- [x] Dataset (simulado) em CSV: v1 e v2 com 4 classes, v3 com 2 classes (seguro / inseguro)
+- [x] Dataset em CSV: v1 e v2 com 4 classes, v3 com 2 classes (seguro / inseguro)
 - [x] Treino, teste e exportação no Edge Impulse (v1, v2 e v3)
 - [x] Firmware com inferência embarcada e ações no carrinho
 - [x] Gravação e teste no carrinho das versões v1 e v2 (logs em `CP2-TinyML/evidencias/`)

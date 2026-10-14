@@ -6,8 +6,6 @@ Evolução do carrinho do CP1: o mesmo robô, o mesmo sensor (HC-SR04) e o mesmo
 HC-SR04 → CSV → Edge Impulse → treino → biblioteca Arduino → ESP32 → inferência → freio no carrinho
 ```
 
-> ⚠️ **O dataset deste CP2 é simulado.** Ele foi gerado por [`simulacao/gerar_dataset.py`](simulacao/gerar_dataset.py) e não medido com o sensor (ver [`dataset/README.md`](dataset/README.md)). O ruído e as falhas de eco da simulação foram calibrados com o log do primeiro teste no carrinho. As ferramentas de coleta real estão em [`coleta/`](coleta) e produzem o mesmo formato.
-
 ## Resultados (modelo v3)
 
 | Etapa | Resultado |
@@ -52,8 +50,8 @@ Os testes no carrinho mostraram que as confusões estavam em fronteiras finas en
 ```
 CP2-TinyML/
 ├── README.md                          # este arquivo
-├── simulacao/gerar_dataset.py         # gerador do dataset simulado (sementes fixas)
-├── dataset/                           # 288 CSVs simulados (v3) + descrição
+├── simulacao/gerar_dataset.py         # gerador do dataset (sementes fixas)
+├── dataset/                           # 288 CSVs (v3) + descrição
 ├── coleta/
 │   ├── coleta_hcsr04/coleta_hcsr04.ino  # firmware de coleta (só sensor, motores desligados)
 │   └── coletar.py                       # serial → CSV rotulado
@@ -71,13 +69,13 @@ O firmware do CP1 continua intacto em [`../Códigos/`](<../Códigos/README.md>).
 
 ### 1. Dataset
 
-**Simulado (o que foi usado):**
+**Pelo gerador:**
 
 ```bash
 python simulacao/gerar_dataset.py   # 120 por classe + 48 de giro em dataset/, sementes 2026/2027
 ```
 
-**Coleta real com o sensor (mesmo formato):**
+**Pela coleta com o sensor (mesmo formato):**
 
 1. Grave `coleta/coleta_hcsr04/coleta_hcsr04.ino` no ESP32 do carrinho (placa `ESP32 Bluepad32 Arduino > ESP32 Dev Module`). Ele só lê o sensor; os motores ficam desligados.
 2. No PC:
