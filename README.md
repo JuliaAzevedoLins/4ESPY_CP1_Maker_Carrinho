@@ -30,19 +30,19 @@ Desenvolver um carrinho robótico funcional que integre projeto mecânico, fabri
 
 ## CP2 — TinyML
 
-No CP2 o mesmo carrinho passou a rodar um **modelo de Machine Learning treinado no Edge Impulse e embarcado no ESP32**. O modelo classifica janelas de 1,8 s de leituras do HC-SR04 em `vazio`, `parado`, `aproximando` e `aceno`, e a classe muda o comportamento do robô:
-- a luz do controle muda de cor conforme a classe;
-- diante de um obstáculo o avanço é limitado;
-- WALL-E "se assusta" (dá ré) quando algo se aproxima;
-- WALL-E "cumprimenta" (balança) diante de um aceno.
+No CP2 o mesmo carrinho passou a rodar um **modelo de Machine Learning treinado no Edge Impulse e embarcado no ESP32**. Com algo a menos de 50 cm, o modelo classifica janelas de 1,8 s de leituras do HC-SR04 em `seguro` ou `inseguro`, ou seja, se a distância está diminuindo rápido demais. A classe muda o comportamento do robô:
+- longe de tudo, a luz do controle fica verde e o carrinho anda normalmente;
+- perto e `seguro`, a luz fica amarela e ele continua andando, o que permite chegar devagar;
+- perto e `inseguro`, a luz fica vermelha, o controle vibra e o carrinho **freia sozinho**.
 
 📁 Pasta do CP2: [`CP2-TinyML/`](<CP2-TinyML/README.md>) · 📄 Documentação: seções 29 a 33 da [documentação técnica](Documentacao.md)
 
 | | |
 |---|---|
-| Dataset | **Simulado** (gerado por script, não medido com o sensor): 200 CSVs, 168 amostras únicas |
-| Modelo | Raw Data + rede densa 20/10, int8. Validação **91,2%**, teste **85,0%** |
+| Dataset | **Simulado** (gerado por script, não medido com o sensor; ruído calibrado com o log do carrinho): 288 CSVs |
+| Modelo | Raw Data + Flatten, rede densa 40/20, int8. Validação **96,5%**, teste **94,04%** |
 | No ESP32 | 1 ms por inferência, 1,4 KB de RAM (estimativa); firmware em 98% da memória de programa |
+| Versões | v1 e v2 (4 classes) testadas no carrinho; a v3 (2 classes) nasceu desses testes |
 
 ## O carrinho finalizado
 
@@ -90,8 +90,10 @@ Instruções completas (calibração, gravação do firmware e solução de prob
 │   ├── dataset/                       # CSVs (simulados) e descrição
 │   ├── simulacao/                     # gerador do dataset
 │   ├── coleta/                        # firmware e script de coleta com o sensor
-│   ├── edge-impulse/                  # prints do processo e biblioteca exportada
-│   └── firmware/PS5_ESP32_TinyML/     # firmware do CP1 + inferência TinyML
+│   ├── edge-impulse/                  # prints do processo e bibliotecas exportadas (v1, v2, v3)
+│   ├── firmware/PS5_ESP32_TinyML/     # firmware do CP1 + inferência TinyML
+│   ├── ferramentas/                   # monitor das inferências pela rede
+│   └── evidencias/                    # logs dos testes no carrinho
 │
 ├── Códigos/                      # firmware do CP1
 │   ├── PS5_ESP32_Bluepad32.ino        # ⭐ firmware oficial do robô (ESP32)
@@ -157,8 +159,9 @@ Os artefatos de planejamento (MVP, MoSCoW, backlog, dependências, kanban e cust
 **CP2 — TinyML**
 
 - [x] Firmware e script de coleta do HC-SR04
-- [x] Dataset (simulado) em CSV, 4 classes
-- [x] Treino, teste e exportação no Edge Impulse
-- [x] Firmware com inferência embarcada e ações no carrinho (compilado)
-- [ ] Gravação e teste no carrinho
+- [x] Dataset (simulado) em CSV: v1 e v2 com 4 classes, v3 com 2 classes (seguro / inseguro)
+- [x] Treino, teste e exportação no Edge Impulse (v1, v2 e v3)
+- [x] Firmware com inferência embarcada e ações no carrinho
+- [x] Gravação e teste no carrinho das versões v1 e v2 (logs em `CP2-TinyML/evidencias/`)
+- [ ] Gravação e teste no carrinho da v3
 - [ ] Vídeo da demonstração
