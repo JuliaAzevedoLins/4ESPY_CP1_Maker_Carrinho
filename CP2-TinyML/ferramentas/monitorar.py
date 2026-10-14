@@ -54,13 +54,14 @@ def main() -> None:
                 if classes is None:                 # rotulos vem do proprio modelo
                     classes = sorted(probs)
                     w.writerow(["hora", "leituras", "inferencias", "distancia_cm", "perto", "estado", "modelo",
-                                "confianca", *[f"p_{c}" for c in classes], "tempo_inferencia_ms", "freio"])
+                                "confianca", *[f"p_{c}" for c in classes], "tempo_inferencia_ms", "freio",
+                                "motivo_ultimo_reinicio"])
                 chave = (d.get("l"), d.get("n"))
                 if chave != ultima:                 # so grava quando ha leitura ou inferencia nova
                     ultima = chave
                     w.writerow([datetime.now().strftime("%H:%M:%S.%f")[:-3], d.get("l"), d.get("n"), d.get("dist"),
                                 d.get("perto"), d.get("estado"), d.get("modelo"), d.get("conf"),
-                                *[probs.get(c) for c in classes], d.get("ms"), d.get("freio")])
+                                *[probs.get(c) for c in classes], d.get("ms"), d.get("freio"), d.get("reset")])
                     f.flush()
                     barras = "  ".join(f"{c} {probs.get(c, 0):4.2f}" for c in classes)
                     print(f"#{d.get('n'):>6}  {d.get('dist'):6.1f} cm  {d.get('estado'):>8}  | {barras}"

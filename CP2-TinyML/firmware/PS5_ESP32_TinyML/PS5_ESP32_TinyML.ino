@@ -329,6 +329,23 @@ void atualizaTinyML() {
   }
 }
 
+// ---------------- Diagnostico ----------------
+
+// Por que o ESP32 reiniciou da ultima vez. "brownout" = a tensao caiu
+// (pilhas fracas ou pico de corrente dos motores).
+const char* motivoReset() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON:  return "liga-desliga";
+    case ESP_RST_SW:       return "software (OTA)";
+    case ESP_RST_BROWNOUT: return "brownout";
+    case ESP_RST_PANIC:    return "panic";
+    case ESP_RST_INT_WDT:
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_WDT:      return "watchdog";
+    default:               return "outro";
+  }
+}
+
 // ---------------- Tela web de calibracao ----------------
 
 const char PAGINA_HTML[] PROGMEM = R"rawliteral(
@@ -381,6 +398,7 @@ const char PAGINA_HTML[] PROGMEM = R"rawliteral(
   </div>
 
   <p class="aviso">Os valores sao salvos automaticamente no ESP32.</p>
+  <p class="aviso" id="diag">--</p>
 
 <script>
 const CORES = { longe:'#4caf50', seguro:'#ffb300', inseguro:'#f44336' };
@@ -406,6 +424,7 @@ function carregar() {
               Math.round(d.probs[k] * 100) + '%;background:' + (CORES[k] || '#888') + '"></i></div></div>';
     }
     document.getElementById('probs').innerHTML = html;
+    document.getElementById('diag').innerText = 'ligado ha ' + d.uptime + ' s | ultimo reinicio: ' + d.reset;
   });
 }
 setInterval(carregar, 200);
@@ -442,6 +461,8 @@ void handleGet() {
                 ",\"ms\":" + String(tempoInferenciaMs) +
                 ",\"n\":" + String(totalInferencias) +
                 ",\"freio\":" + (freioAtivo() ? "true" : "false") +
+                ",\"reset\":\"" + motivoReset() + "\"" +
+                ",\"uptime\":" + String(millis() / 1000) +
                 ",\"probs\":{";
   for (int i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++) {
     if (i) json += ",";
@@ -491,6 +512,9 @@ void setup() {
   trimA = prefs.getFloat("trimA", 1.0f);
   trimB = prefs.getFloat("trimB", 1.0f);
 
+  Serial.print("Motivo do ultimo reinicio: ");
+  Serial.println(motivoReset());
+
   Serial.print("TinyML | modelo: ");
   Serial.print(JANELA);
   Serial.print(" leituras a cada ");
@@ -505,6 +529,9 @@ void setup() {
   // ---- Wifi ----
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
+  // Menos potencia de transmissao = picos de corrente menores. Com os motores
+  // puxando as pilhas no chao, os picos do Wi-Fi + Bluetooth derrubavam o ESP32.
+  WiFi.setTxPower(WIFI_POWER_11dBm);
   Serial.print("Conectando no wifi");
   unsigned long inicio = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - inicio < 15000) {
