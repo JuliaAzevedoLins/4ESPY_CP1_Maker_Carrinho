@@ -16,7 +16,7 @@
       aceno        -> luz azul;     parado: WALL-E "cumprimenta" (balanca)
 */
 
-#include <carrinho_walle_tinyml_inferencing.h>   // biblioteca exportada do Edge Impulse
+#include <carrinho_walle_tinyml_v2_inferencing.h>   // biblioteca exportada do Edge Impulse (modelo v2)
 #include <Bluepad32.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -72,10 +72,10 @@ unsigned long proximaLeitura = 0;
 
 // ---- TinyML ----
 const int   JANELA            = EI_CLASSIFIER_RAW_SAMPLE_COUNT;  // leituras por inferencia
-const int   INFERENCIA_PASSO  = 5;       // infere a cada 5 leituras novas (300 ms)
+const int   INFERENCIA_PASSO  = 3;       // infere a cada 3 leituras novas (180 ms)
 const float CONFIANCA_MIN     = 0.80f;   // abaixo disso, a classificacao e ignorada
-const int   CONFIRMACOES      = 2;       // inferencias seguidas iguais para aceitar a classe
-const unsigned long OCIOSO_MS = 800;     // sticks soltos por esse tempo = robo parado
+const int   CONFIRMACOES      = 3;       // inferencias seguidas iguais para aceitar a classe (540 ms)
+const unsigned long OCIOSO_MS = 500;     // sticks soltos por esse tempo = robo parado
 const unsigned long PAUSA_POS_MANOBRA_MS = 2000;  // janela inteira sem o movimento do proprio robo
 
 float janela[JANELA];        // buffer circular com as ultimas leituras
@@ -419,7 +419,7 @@ function carregar() {
     document.getElementById('probs').innerHTML = html;
   });
 }
-setInterval(carregar, 300);
+setInterval(carregar, 200);
 let tId = null;
 function mudou(motor, val) {
   editando = true;
