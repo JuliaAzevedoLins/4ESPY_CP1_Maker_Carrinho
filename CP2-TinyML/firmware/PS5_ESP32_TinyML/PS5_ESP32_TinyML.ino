@@ -45,10 +45,10 @@ const char* OTA_HOSTNAME = "carrinho-esp32";
 #define CH_IN4 3
 
 // ---- Velocidade maxima (0 a 255) ----
-int velMax = 200;
+int velMax = 170;   // CP1: 200. Menor pico de corrente nas pilhas (R2 aumenta ate 255)
 
 // ---- Suavidade da rampa ----
-const int  RAMP_PASSO     = 12;
+const int  RAMP_PASSO     = 6;    // CP1: 12. Arranque em ~0,5 s: menos pico de corrente (brownout)
 const long RAMP_INTERVALO = 15;
 
 // Zona morta em unidades cruas do stick (eixo vai de -511 a 512)
