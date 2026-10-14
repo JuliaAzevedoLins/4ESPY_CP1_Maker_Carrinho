@@ -1303,6 +1303,7 @@ O freio de 20 cm do CP1 continua valendo por baixo de tudo isso. Na prática:
 | Firmware com o modelo embarcado | [`CP2-TinyML/firmware/PS5_ESP32_TinyML/`](<CP2-TinyML/firmware/PS5_ESP32_TinyML/PS5_ESP32_TinyML.ino>) |
 | Monitor das inferências pela rede | [`CP2-TinyML/ferramentas/monitorar.py`](<CP2-TinyML/ferramentas/monitorar.py>) |
 | Logs dos testes no carrinho | [`CP2-TinyML/evidencias/`](<CP2-TinyML/evidencias>) |
+| Vídeo da demonstração | [`vídeo/cp2-demonstracao-tinyml.mp4`](<vídeo/cp2-demonstracao-tinyml.mp4>) |
 
 ---
 
@@ -1599,6 +1600,8 @@ Os testes foram registrados pela rede com `monitorar.py`, sem cabo serial.
 - A investigação e as mudanças estão na seção 32.6.
 
 *3b. Com pilhas novas (18:13–18:18, 5,5 min contínuos):* **nenhum reinício.**
+
+🎥 **Vídeo da demonstração:** [`vídeo/cp2-demonstracao-tinyml.mp4`](<vídeo/cp2-demonstracao-tinyml.mp4>) (34 s, gravado às 18:17). Ele mostra o painel web no notebook com o estado (`longe`, `seguro`) e as probabilidades, e a luz do controle mudando de verde para vermelha quando o carrinho freia diante da parede.
 
 | # | Teste | Resultado |
 |---|---|---|

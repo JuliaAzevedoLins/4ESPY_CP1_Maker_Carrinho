@@ -19,6 +19,7 @@ HC-SR04 → CSV → Edge Impulse → treino → biblioteca Arduino → ESP32 →
 | Firmware completo | Compila; 98% da memória de programa |
 | Execução no carrinho (v3) | ✅ 7 freadas a 21–32 cm/s (`inseguro` 82–96%), quase todas a 34–42 cm. Aproximações lentas, de 6–9 cm/s, sem freio. Logs em [`evidencias/`](evidencias) |
 | Alimentação | Com pilhas gastas, o ESP32 reiniciava por brownout. Com pilhas novas, nenhum reinício (seção 32.6 da documentação) |
+| Vídeo | 🎥 [`../vídeo/cp2-demonstracao-tinyml.mp4`](<../vídeo/cp2-demonstracao-tinyml.mp4>): painel web e luz do controle durante o freio |
 
 Detalhes, matrizes de confusão, histórico das versões e prints estão nas seções 29 a 33 da [documentação técnica](<../Documentacao.md>). Os prints ficam em [`edge-impulse/prints/`](edge-impulse/prints), um subdiretório por versão.
 

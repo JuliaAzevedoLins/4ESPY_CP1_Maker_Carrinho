@@ -35,7 +35,7 @@ No CP2 o mesmo carrinho passou a rodar um **modelo de Machine Learning treinado 
 - perto e `seguro`, a luz fica amarela e ele continua andando, o que permite chegar devagar;
 - perto e `inseguro`, a luz fica vermelha, o controle vibra e o carrinho **freia sozinho**.
 
-📁 Pasta do CP2: [`CP2-TinyML/`](<CP2-TinyML/README.md>) · 📄 Documentação: seções 29 a 33 da [documentação técnica](Documentacao.md)
+📁 Pasta do CP2: [`CP2-TinyML/`](<CP2-TinyML/README.md>) · 📄 Documentação: seções 29 a 33 da [documentação técnica](Documentacao.md) · 🎥 [Vídeo da demonstração](<vídeo/cp2-demonstracao-tinyml.mp4>)
 
 | | |
 |---|---|
@@ -165,4 +165,4 @@ Os artefatos de planejamento (MVP, MoSCoW, backlog, dependências, kanban e cust
 - [x] Firmware com inferência embarcada e ações no carrinho
 - [x] Gravação e teste no carrinho das versões v1 e v2 (logs em `CP2-TinyML/evidencias/`)
 - [x] Gravação e teste no carrinho da v3: 7 freadas, nenhum reinício com pilhas novas
-- [x] Vídeo da demonstração gravado
+- [x] Vídeo da demonstração: [`vídeo/cp2-demonstracao-tinyml.mp4`](<vídeo/cp2-demonstracao-tinyml.mp4>)
